@@ -1,0 +1,85 @@
+# Classroom stack:
+#   dummy-sensor → Mosquitto MQTT → mcp-server :8000 → Open WebUI :8080
+#
+# Open WebUI talks to the LLM with OpenAI-compatible env vars from `.env`.
+# Native MCP is Streamable HTTP at http://mcp-server:8000/mcp (not SSE).
+
+name: sensor-agent-lab
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: lab-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    restart: unless-stopped
+
+  dummy-sensor:
+    build:
+      context: ./dummy-sensor
+    container_name: lab-dummy-sensor
+    depends_on:
+      - mosquitto
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      PUBLISH_INTERVAL_SEC: ${PUBLISH_INTERVAL_SEC:-2}
+      ANOMALY_EVERY_SEC: ${ANOMALY_EVERY_SEC:-45}
+      WARNING_RMS_MM_S: ${WARNING_RMS_MM_S:-4.5}
+      ANOMALY_RMS_MM_S: ${ANOMALY_RMS_MM_S:-7.0}
+    restart: unless-stopped
+
+  mcp-server:
+    build:
+      context: ./mcp-server
+    container_name: lab-mcp-server
+    depends_on:
+      - mosquitto
+    ports:
+      - "8000:8000"
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: "8000"
+      MCP_PATH: /mcp
+      WARNING_RMS_MM_S: ${WARNING_RMS_MM_S:-4.5}
+      ANOMALY_RMS_MM_S: ${ANOMALY_RMS_MM_S:-7.0}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 15s
+
+  open-webui:
+    # Pinned so MCP (Streamable HTTP) and Skills UI stay where the docs point.
+    image: ghcr.io/open-webui/open-webui:v0.11.3
+    container_name: lab-open-webui
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      OPENAI_API_BASE_URL: ${OPENAI_API_BASE_URL:-https://api.groq.com/openai/v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_API_MODELS: ${OPENAI_API_MODEL:-llama-3.1-8b-instant}
+      DEFAULT_MODELS: ${OPENAI_API_MODEL:-llama-3.1-8b-instant}
+      WEBUI_AUTH: ${WEBUI_AUTH:-false}
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY:-workshop-only-not-a-real-secret}
+      ENABLE_PERSISTENT_CONFIG: ${ENABLE_PERSISTENT_CONFIG:-false}
+      ENABLE_OPENAI_API: "true"
+      MCP_INITIALIZE_TIMEOUT: "30"
+      # Pre-wire the lab MCP server. Auth MUST be "none" (empty bearer breaks tool calls).
+      TOOL_SERVER_CONNECTIONS: >-
+        [{"type":"mcp","url":"http://mcp-server:8000/mcp","path":"","auth_type":"none","key":"","config":{"enable":true},"info":{"id":"vibration-pdm","name":"Vibration PdM","description":"Dummy plant vibration sensors (MQTT)"}}]
+    volumes:
+      - open-webui-data:/app/backend/data
+    restart: unless-stopped
+
+volumes:
+  open-webui-data:
