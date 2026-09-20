@@ -1,171 +1,100 @@
-# 예지보전 챗봇 실습 — Sensor Agent Tutorial
+# 예지보전 에이전트 실습
 
-비개발자를 위한 **100분** 과정입니다. 센서 신호처리 강의가 아닙니다.
-**AI 엔지니어가 진행**하는, “현장 숫자를 챗봇이 거짓말하지 않게 만드는” 실습입니다.
+더미 공장(센서 10) → MCP → Open WebUI. **100분** 워크숍.
 
-| 구분 | 시간 | 무엇을 가져가나 |
-| --- | --- | --- |
-| 이론 | 50분 | 예지보전 한 장, 이상(anomaly) 시나리오, 챗봇·MCP·Skills, **설계 원칙(가장 깊게)** |
-| 실습 | 50분 | GitHub Codespaces에서 Open WebUI를 열고, 더미 진동 → MQTT → MCP → 챗봇 |
-
-슬라이드 노트와 진행자 가이드의 분(minute)은 이 표와 같습니다.
-
----
-
-## 이 과정이 맞는 사람
-
-- 설비·품질·보전·기획 등 **현장 언어는 알지만 코드를 업으로 하지 않는 분**
-- “LLM을 설비에 붙이면 뭘 조심해야 하나”를 한 번에 보고 싶은 분
-- 진동 스펙트럼, FFT, ISO 20816을 **오늘 배우러 온 분은 아닙니다**
-
-진행자도 진동 전문가가 아닙니다. 오늘 숫자는 **학습용 더미 데이터**입니다.
-실제 회전기계 진단·정비 절차로 쓰지 마세요.
-
----
-
-## 100분 구성
-
-### 이론 50분
-
-1. **예지보전 개요 (~8분)**  
-   고장이 난 뒤(사후) / 달력으로(예방) / 상태 신호로(예지).  
-   예지보전은 “AI가 설비를 고친다”가 아니라 **감지 → 판단 → 사람이 조치** 루프입니다.
-
-2. **센서 이상 시나리오 (~10분)**  
-   가상 플랜트: 냉각수 펌프 A, HVAC 팬 B.  
-   진동 RMS가 올라가면 현업 언어로는 “상태가 나빠지고 있다”입니다.  
-   오늘 실습의 이상(anomaly)은 **단순한 임계값**입니다. 딥러닝 탐지가 아닙니다.
-
-3. **챗봇 + MCP + Skills (~15분)**  
-   LLM은 플랜트에 연결되어 있지 않습니다.  
-   **MCP**는 모델이 부를 수 있는 도구(센서 목록, 최근 값, 이상 목록)의 표준 연결입니다.  
-   **Skills**는 그 도구를 *어떻게* 쓸지 적어 둔 **Markdown 플레이북**입니다. 코드가 아닙니다.
-
-4. **Skill / MCP 설계 원칙 (~17분, 가장 깊게)**  
-   작게, 이름 분명하게, 최소 권한, 숫자는 발명 금지, 정비 결정은 사람.  
-   여기가 오늘 이론의 핵심입니다. 도구를 많이 만드는 법이 아닙니다.
-
-### 실습 50분
-
-GitHub Codespaces에서 playground를 띄웁니다.
-
-```text
-더미 진동 센서  →  MQTT (Mosquitto)  →  MCP 서버 :8000  →  Open WebUI :8080
-                                              ↑
-                                      Markdown Skill
-```
-
-1. Codespaces + `docker compose`로 스택 기동
-2. `.env`에 **OpenAI 호환 무료 LLM** 엔드포인트만 연결 (키는 저장소에 없음)
-3. Open WebUI에서 MCP(Streamable HTTP) 연결과 Skill 붙이기
-4. 질문: 센서가 뭐가 있나 / 지금 값 / 최근 이상
-5. 답을 **현장 언어로 읽고**, 모델이 숫자를 지어냈는지 확인
-
-Skills는 **Markdown 파일만** 사용합니다. Open WebUI Python Function으로 도구를 작성하지 않습니다.
-
----
-
-## 자료 바로가기
-
-| 자료 | 설명 |
+| 자료 | |
 | --- | --- |
-| [slides/예지보전_에이전트_실습.pptx](slides/예지보전_에이전트_실습.pptx) | 강의용 슬라이드 (~34장, 노트에 시간) |
-| [slides/예지보전_에이전트_실습.pdf](slides/예지보전_에이전트_실습.pdf) | 배포·인쇄용 PDF |
-| [docs/INSTRUCTOR.md](docs/INSTRUCTOR.md) | 진행자 타임테이블, 실패 복구, 말하지 말 것 |
-| [docs/STUDENT.md](docs/STUDENT.md) | 수강생 실습 절차, 따라 할 질문, 문제 해결 |
-| [playground/](playground/) | Mosquitto + 더미 센서 + MCP + Open WebUI |
-| [playground/skills/vibration-pdm.md](playground/skills/vibration-pdm.md) | 오늘 붙일 Markdown Skill |
+| 슬라이드 | [slides/예지보전_에이전트_실습.pptx](slides/예지보전_에이전트_실습.pptx) |
+| 진행자 | [docs/INSTRUCTOR.md](docs/INSTRUCTOR.md) |
+| 수강생 | [docs/STUDENT.md](docs/STUDENT.md) |
 
-슬라이드 원본 생성 스크립트는 [`slides/generate_slides.py`](slides/generate_slides.py) 입니다.
+공장 http://localhost:8000 · 챗봇 http://localhost:8080 · MCP http://localhost:8000/mcp
+
+Docker는 쓰지 않습니다. **uv**만 있으면 됩니다.
 
 ---
 
-## 실습을 5분 안에 켜는 법
+## 1. uv 설치
 
-**권장: GitHub Codespaces** (로컬 Docker가 없어도 됩니다.)
+**Windows (PowerShell)**
 
-1. 이 저장소에서 **Code → Codespaces → Create codespace on `main`**
-2. 터미널:
+`powershell
+irm https://astral.sh/uv/install.ps1 | iex
+`
 
-```bash
+**macOS / Linux**
+
+`ash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+`
+
+터미널을 다시 연 뒤 uv --version.
+
+---
+
+## 2. API 키 발급
+
+[Groq](https://console.groq.com/keys) (무료, 기본값)
+
+1. 가입 / 로그인
+2. **API Keys → Create API Key**
+3. 키 복사. 채팅·슬라이드·깃에 붙이지 말 것
+
+다른 공급자: [OpenRouter](https://openrouter.ai/keys), [Google AI Studio](https://aistudio.google.com/apikey)
+
+---
+
+## 3. 키 넣기
+
+`powershell
 cd playground
-cp .env.example .env
-# .env 에 본인 무료 티어 LLM 키만 입력
-./scripts/up.sh
-```
+copy .env.example .env
+`
 
-3. 포트 **8080** → Open WebUI  
-4. 이후 클릭 순서는 [docs/STUDENT.md](docs/STUDENT.md)
+macOS / Linux는 cp .env.example .env.
 
-로컬에서 할 때도 같습니다. `playground/scripts/down.sh`로 내립니다.
+.env에서 이 한 줄만 채웁니다.
 
-MCP가 살아 있는지는 브라우저 없이 확인할 수 있습니다.
+`env
+OPENAI_API_KEY=여기에_키
+`
 
-```bash
-curl -s http://localhost:8000/health
-curl -s http://localhost:8000/demo/sensors
-```
-
-챗봇이 막히면 이 JSON이 **정답지**입니다. 모델 답이 이와 다르면 모델이 추측한 것입니다.
+기본 모델은 Groq llama-3.1-8b-instant. 공급자를 바꾸면 .env.example 주석의 URL·모델 이름을 따릅니다.
 
 ---
 
-## 무료 LLM 연결 (비밀 키 없음)
+## 4. 실행 (터미널 2개)
 
-`playground/.env.example`만 저장소에 있습니다. 키는 각자 `.env`에만 넣습니다.
+둘 다 playground 폴더에서.
 
-Open WebUI는 **OpenAI 호환** 엔드포인트를 받습니다. 수업에서 검증하기 쉬운 예:
+**터미널 1 — 공장 + MCP**
 
-- Groq 무료 티어 (`https://api.groq.com/openai/v1`)
-- OpenRouter 무료 모델
-- Google AI Studio OpenAI 호환 엔드포인트
-- 사내 게이트웨이가 이미 OpenAI 형식이면 그 URL
+`powershell
+uv run --python 3.12 --env-file .env python mcp-server/server.py
+`
 
-모델 이름은 공급자마다 다릅니다. `.env.example` 주석을 그대로 따라 가면 됩니다.
+→ http://localhost:8000
 
----
+**터미널 2 — Open WebUI**
 
-## 오늘 반드시 말할 리스크
+`powershell
+uv run --python 3.12 --with open-webui==0.11.3 --env-file .env open-webui serve --host 127.0.0.1 --port 8080
+`
 
-1. **무료 티어 속도 제한**  
-   실습 중 갑자기 429, 빈 답, “잠시 후”가 나옵니다.  
-   진행자는 MCP `curl` 결과로 수업을 계속합니다. LLM이 꺼져도 아키텍처 실습은 끝나지 않습니다.
+→ http://localhost:8080
 
-2. **Open WebUI 관리자 부담**  
-   MCP 추가는 **관리자(Integrations)** 권한이 필요합니다.  
-   계정·첫 가입자=관리자·비밀번호 분실이 50분을 잡아먹습니다.  
-   워크숍 기본값은 인증 해제(`WEBUI_AUTH=false`)이며, **학습용**입니다. 사내 개방망에 그대로 두지 마세요.
+첫 Open WebUI 실행은 패키지 받느라 몇 분 걸릴 수 있습니다. 끄려면 각 터미널에서 Ctrl+C.
 
 ---
 
-## 오늘 다루는 MCP 도구 (3개뿐)
+## 5. MCP + Skill
 
-| 도구 | 하는 일 | 하지 않는 일 |
-| --- | --- | --- |
-| `list_sensors` | 센서 목록과 마지막 상태 | 설비 기동/정지 |
-| `get_vibration_reading` | 한 센서의 최신 진동 값 | 스펙트럼/FFT |
-| `get_recent_anomalies` | 최근 이상 이벤트 | 정비 작업 지시 |
+Open WebUI → **Admin → External Tools / Integrations → Add**
 
-이 세 가지가 “작게 설계한다”의 예시입니다.
+- 타입: **MCP (Streamable HTTP)** (OpenAPI 아님)
+- URL: http://127.0.0.1:8000/mcp
+- Auth: **None**
 
----
+Skill: [playground/skills/vibration-pdm.md](playground/skills/vibration-pdm.md) 전체를 **Workspace → Skills** (없으면 Prompts)에 붙여 넣기.
 
-## 저장소 구조
-
-```text
-docs/           진행자·수강생 가이드 (한국어)
-slides/         PPTX · PDF · 생성 스크립트
-playground/     docker-compose 실습 스택
-  dummy-sensor/   가짜 진동 → MQTT
-  mcp-server/     도구 3개 + /health + /demo
-  mosquitto/      MQTT 브로커
-  skills/         Markdown Skill
-  scripts/        up / down / codespaces-bootstrap
-```
-
----
-
-## 라이선스
-
-MIT. 교재로 복사·수정해도 됩니다. 현장 안전 책임은 가져가지 마세요.
-기여는 [CONTRIBUTING.md](CONTRIBUTING.md), 배포 메모는 [PUSH.md](PUSH.md).
+질문 목록은 [docs/STUDENT.md](docs/STUDENT.md).

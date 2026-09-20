@@ -217,8 +217,8 @@ def build() -> Path:
         color=SOFT,
         space=4,
     )
-    _card(s, 0.55, 4.3, 3.7, 1.85, "01 이론", "설계가 본게임", "도구 3개와 Markdown Skill.\n모델이 숫자를 발명하지 않게.", CYAN)
-    _card(s, 4.55, 4.3, 3.7, 1.85, "02 경로", "더미 진동 → MQTT", "MCP :8000  →  Open WebUI :8080\nCodespaces에서 그대로 기동.", AMBER)
+    _card(s, 0.55, 4.3, 3.7, 1.85, "01 이론", "설계가 본게임", "조회 vs 변경, Skill.\n에이전트가 과한 때를 가른다.", CYAN)
+    _card(s, 4.55, 4.3, 3.7, 1.85, "02 경로", "더미 공장 → SQLite", "MCP :8000  →  Open WebUI :8080\nMQTT 없음.", AMBER)
     _card(s, 8.55, 4.3, 3.7, 1.85, "03 한계", "학습용 더미", "실제 정비 절차가 아닙니다.\n무료 한도와 관리자 비용을 같이 봅니다.", ROSE)
     add(s, "0–1분. 제목만. ‘예지보전 전문 강의가 아님’을 첫 문장으로. 진행자는 AI 엔지니어다.")
 
@@ -230,8 +230,8 @@ def build() -> Path:
         ("0–8분", "이론 1", "예지보전 개요", "사후 / 예방 / 예지, 감지→판단→사람"),
         ("8–18분", "이론 2", "센서 이상 시나리오", "펌프 A · 팬 B, RMS, 수업용 임계값"),
         ("18–33분", "이론 3", "챗봇 + MCP + Skills", "LLM은 현장에 없다. 도구와 플레이북"),
-        ("33–50분", "이론 4", "설계 원칙 (가장 깊게)", "작은 도구, 그라운딩, 사람 승인"),
-        ("50–100분", "실습", "Open WebUI in Codespaces", "더미 진동 → MQTT → MCP → 챗봇"),
+        ("33–50분", "이론 4", "설계 원칙 (가장 깊게)", "에이전트 vs 과함, 더미 변경 vs 실설비"),
+        ("50–100분", "실습", "uv + Open WebUI", "더미 공장 → SQLite → MCP → 챗봇"),
     ]
     y = 1.45
     for tmin, blk, title, body in rows:
@@ -241,7 +241,7 @@ def build() -> Path:
         _textbox(s, Inches(2.5), Inches(y + 0.42), Inches(4.0), Inches(0.36), title, size=16, bold=True, color=WHITE, space=0)
         _textbox(s, Inches(7.0), Inches(y + 0.28), Inches(5.4), Inches(0.4), body, size=14, color=SOFT, space=0)
         y += 0.98
-    add(s, "1–2분. 표를 손가락으로 가리키며 이론4가 가장 길다고 미리 선언. 실습은 Codespaces.")
+    add(s, "1–2분. 표를 손가락으로 가리키며 이론4가 가장 길다고 미리 선언. 실습은 uv.")
 
     # 3 Audience
     s = new_slide(prs)
@@ -250,7 +250,7 @@ def build() -> Path:
     _card(s, 0.55, 1.55, 6.0, 2.4, "맞는 분", "현장 언어는 안다", "보전·품질·설비·기획.\nLLM을 설비에 붙일 때 뭐가 깨지는지\n한 번에 보고 싶다.", MINT)
     _card(s, 6.8, 1.55, 6.0, 2.4, "아닌 분", "오늘 FFT는 없습니다", "결함주파수, ISO 20816, 엔벨로프는\n범위 밖. 질문이면 ‘다음에’로 받습니다.", ROSE)
     _card(s, 0.55, 4.15, 6.0, 2.15, "진행자", "AI 엔지니어", "진동 권위를 빌리지 않습니다.\n권위는 도구와 문장 설계에 둡니다.", CYAN)
-    _card(s, 6.8, 4.15, 6.0, 2.15, "데이터", "전부 더미", "펌프가 정말 아픈 것이 아닙니다.\n45초마다 스파이크를 넣었습니다.", AMBER)
+    _card(s, 6.8, 4.15, 6.0, 2.15, "데이터", "전부 더미", "펌프가 정말 아픈 것이 아닙니다.\n10초마다 스파이크를 넣었습니다.", AMBER)
     add(s, "2분. 청중이 안도하게. ‘질문해도 진동 시험이 아니다’.")
 
     # 4 Goals
@@ -261,7 +261,7 @@ def build() -> Path:
         ("1", "예지보전은 루프다", "AI가 설비를 고치는 마법이 아니라 감지 → 판단 → 사람 조치."),
         ("2", "챗봇은 센서가 아니다", "지금 값은 MCP 도구에서 온다. 모델 기억에서 오지 않는다."),
         ("3", "Skill은 Markdown이다", "파이썬 함수가 아니라 절차서다. 문장이 모델 행동을 고정한다."),
-        ("4", "결정은 사람 것이다", "정지·분해를 모델에게 승인 권한으로 주지 않는다."),
+        ("4", "에이전트는 가려 쓴다", "한 숫자 조회는 과할 수 있다. 도구를 이을 때 맞다. 실설비 변경은 위험."),
     ]
     y = 1.5
     for num, title, body in goals:
@@ -310,16 +310,16 @@ def build() -> Path:
     _title(s, "AI는 루프의 한가운데가 아닙니다")
     steps = [
         ("1 감지", "센서", "진동 RMS"),
-        ("2 전달", "MQTT", "메시지 버스"),
-        ("3 조회", "MCP", "도구 3개"),
+        ("2 기록", "SQLite", "파일 DB"),
+        ("3 조회", "MCP", "읽기 도구"),
         ("4 설명", "챗봇", "현장 언어"),
-        ("5 결정", "사람", "기동/정지"),
+        ("5 조치", "더미/사람", "on·fail·replace"),
     ]
     x = 0.55
     for i, (title, mid, body) in enumerate(steps):
         _card(s, x, 1.7, 2.3, 3.4, f"STEP {i+1}", title, f"{mid}\n\n{body}", CYAN if i < 4 else AMBER)
         x += 2.5
-    _textbox(s, Inches(0.55), Inches(5.35), Inches(12.2), Inches(0.7), "챗봇은 4번입니다. 5번을 챗봇에게 주면 오늘 설계가 실패한 것입니다.", size=16, color=AMBER, space=0)
+    _textbox(s, Inches(0.55), Inches(5.35), Inches(12.2), Inches(0.7), "챗봇은 4번입니다. 5번의 실설비 기동/정지를 챗봇에게 주면 설계가 실패한 것입니다.", size=16, color=AMBER, space=0)
     add(s, "2분. 손가락으로 5칸. 이론1 종료.")
 
     # 9 Section theory 2
@@ -340,24 +340,25 @@ def build() -> Path:
     # 11 Plant
     s = new_slide(prs)
     _kicker(s, "THEORY 2  ·  가상 플랜트")
-    _title(s, "오늘 센서는 세 개뿐입니다")
+    _title(s, "오늘은 설비 9대, 센서 10개의 가상 공장입니다")
     table = [
-        ("pump-a-de", "냉각수 펌프 A", "구동측 베어링", "주인공 · 주기적 스파이크"),
-        ("pump-a-nde", "냉각수 펌프 A", "비구동측 베어링", "대체로 평온"),
-        ("fan-b-motor", "HVAC 팬 B", "모터 하우징", "대조군"),
+        ("펌프실", "pump-a-de / pump-a-nde", "주인공 · 주기적 스파이크"),
+        ("압축기실", "compressor-c / blower-f", "유틸리티"),
+        ("생산 라인", "conveyor · mixer · press", "배경 설비 4점"),
+        ("공조·냉각탑", "fan-b-motor / cooling-tower-fan", "대조군"),
     ]
     y = 1.5
     _box(s, Inches(0.55), Inches(y), Inches(12.2), Inches(0.55), CARD2)
-    for i, h in enumerate(["sensor_id", "자산", "위치", "역할"]):
-        _textbox(s, Inches(0.7 + i * 3.0), Inches(y + 0.12), Inches(2.9), Inches(0.35), h, size=13, bold=True, color=CYAN, space=0)
+    for i, h in enumerate(["구역", "sensor_id", "역할"]):
+        _textbox(s, Inches(0.7 + i * 4.0), Inches(y + 0.12), Inches(3.8), Inches(0.35), h, size=13, bold=True, color=CYAN, space=0)
     y = 2.15
     for row in table:
-        _box(s, Inches(0.55), Inches(y), Inches(12.2), Inches(0.85), CARD, LINE)
+        _box(s, Inches(0.55), Inches(y), Inches(12.2), Inches(0.72), CARD, LINE)
         for i, cell in enumerate(row):
-            _textbox(s, Inches(0.7 + i * 3.0), Inches(y + 0.22), Inches(2.9), Inches(0.45), cell, size=15, color=WHITE, space=0)
-        y += 0.95
-    _textbox(s, Inches(0.55), Inches(5.2), Inches(12.2), Inches(0.7), "ID를 외울 필요는 없습니다. Skill과 슬라이드가 같은 이름을 씁니다.", size=15, color=MUTED, space=0)
-    add(s, "3분. pump-a-de만 기억하게.")
+            _textbox(s, Inches(0.7 + i * 4.0), Inches(y + 0.18), Inches(3.8), Inches(0.45), cell, size=15, color=WHITE, space=0)
+        y += 0.80
+    _textbox(s, Inches(0.55), Inches(5.4), Inches(12.2), Inches(0.7), "지도는 http://localhost:8000 . 외울 ID는 pump-a-de 하나면 됩니다.", size=15, color=MUTED, space=0)
+    add(s, "3분. pump-a-de만 기억하게. 10개는 지도로 보여 준다.")
 
     # 12 Anomaly language
     s = new_slide(prs)
@@ -377,7 +378,7 @@ def build() -> Path:
         "warning  ≥  4.5 mm/s     anomaly  ≥  7.0 mm/s",
         "",
         "이 숫자는 수업용입니다. 현장 기준이 아닙니다.",
-        "더미 센서는 45초마다 pump-a-de를 한 번 스파이크합니다.",
+        "더미 센서는 약 10초마다 이상을 한 번 스파이크합니다.",
         "데모가 ‘아무 이상 없음’으로 죽지 않게 하려고요.",
         "탐지 지능을 모델에게 맡기지 않은 것은 의도입니다.",
     ]
@@ -420,10 +421,10 @@ def build() -> Path:
     _title(s, "MCP는 도구를 부르는 표준 계약입니다")
     _card(s, 0.55, 1.5, 6.0, 2.2, "무엇인가", "Model Context Protocol", "챗봇 호스트가 외부 도구를\n같은 방식으로 발견·호출하게.", CYAN)
     _card(s, 6.8, 1.5, 6.0, 2.2, "오늘 전송", "Streamable HTTP", "Open WebUI 네이티브 MCP는 SSE/stdio가 아닙니다.\nURL은 /mcp .", VIOLET)
-    _card(s, 0.55, 3.9, 3.9, 2.4, "도구 1", "list_sensors", "뭐가 있나.", MINT)
-    _card(s, 4.7, 3.9, 3.9, 2.4, "도구 2", "get_vibration_reading", "한 점의 최신 값.", AMBER)
-    _card(s, 8.85, 3.9, 3.9, 2.4, "도구 3", "get_recent_anomalies", "최근 이상만.", ROSE)
-    add(s, "5분. 도구 이름을 크게. 네 번째 도구를 즉석 제안하지 말 것.")
+    _card(s, 0.55, 3.9, 3.9, 2.4, "조회", "list / get", "assets · sensors · events", MINT)
+    _card(s, 4.7, 3.9, 3.9, 2.4, "변경(더미)", "power / fail", "set_asset_power, fail_asset", AMBER)
+    _card(s, 8.85, 3.9, 3.9, 2.4, "교체(더미)", "replace_asset", "고장난 인스턴스만.", ROSE)
+    add(s, "5분. 조회와 변경을 갈라서. 실설비 변경이 아님을 한 번 더.")
 
     # 18 Skills
     s = new_slide(prs)
@@ -434,7 +435,7 @@ def build() -> Path:
         "언제: 이 문서를 꺼내야 하는 질문",
         "절차: 도구를 어떤 순서로 부를지",
         "출력: 요약 / 근거 / 해석 / 권고 / 한계",
-        "금지: 숫자 발명, 정지 명령, 비밀 키",
+        "금지: 숫자 발명, 없는 ID, 실설비를 더미처럼",
     ]
     _box(s, Inches(0.55), Inches(1.5), Inches(7.3), Inches(4.8), CARD, LINE)
     _textbox(s, Inches(0.85), Inches(1.75), Inches(6.8), Inches(4.3), "\n\n".join("▸  " + x for x in items), size=17, color=WHITE, space=6)
@@ -446,9 +447,9 @@ def build() -> Path:
     _kicker(s, "THEORY 3  ·  데이터 경로")
     _title(s, "한 장으로 외우는 오늘 아키텍처")
     boxes = [
-        ("더미 센서", "Python\n가짜 RMS"),
-        ("MQTT", "Mosquitto\n:1883"),
-        ("MCP", "도구 3개\n:8000/mcp"),
+        ("더미 공장", "생성기\n+ SQLite"),
+        ("MCP", "조회·변경\n:8000/mcp"),
+        ("지도", "top-down\n:8000/"),
         ("Open WebUI", "챗봇\n:8080"),
         ("LLM", "무료 티어\nOpenAI 호환"),
     ]
@@ -484,9 +485,9 @@ def build() -> Path:
     s = new_slide(prs)
     _kicker(s, "THEORY 4  ·  MCP TOOLS")
     _title(s, "도구는 작고, 이름이 동사+명사여야 합니다")
-    _card(s, 0.55, 1.55, 6.0, 4.7, "하는 쪽", "오늘 세 개", "list_sensors\nget_vibration_reading\nget_recent_anomalies\n\n읽기만. 최소 권한.", MINT)
-    _card(s, 6.8, 1.55, 6.0, 4.7, "하지 않는 쪽", "금지 예시", "do_everything\nanalyze_plant\nstop_pump\n\n한 도구가 설명+판단+조치를\n다 하면 모델이 거대해집니다.", ROSE)
-    add(s, "4분. stop_pump가 없는 것이 설계다.")
+    _card(s, 0.55, 1.55, 6.0, 4.7, "조회", "list / get / events", "list_assets\nlist_sensors\nget_vibration_reading\nget_recent_events", MINT)
+    _card(s, 6.8, 1.55, 6.0, 4.7, "변경 (더미만)", "request / power / fail / replace", "request_fix  → 화면 수락\nset_asset_power\nfail_asset\nreplace_asset\n\n에이전트는 공구를 잡지 않는다.", ROSE)
+    add(s, "4분. 조회와 변경을 갈라 둔 것이 설계다. 실설비 버튼이 아님.")
 
     # 23 Grounding
     s = new_slide(prs)
@@ -505,11 +506,11 @@ def build() -> Path:
 
     # 24 Human
     s = new_slide(prs)
-    _kicker(s, "THEORY 4  ·  SAFETY")
-    _title(s, "정비 결정은 사람의 권한입니다")
-    _card(s, 0.55, 1.55, 6.0, 4.7, "모델이 해도 되는 것", "설명 · 인용 · 제안", "숫자를 읽고 현장 언어로 옮긴다.\n‘확인해 주세요’까지.", CYAN)
-    _card(s, 6.8, 1.55, 6.0, 4.7, "모델이 하면 안 되는 것", "승인 · 기동 · 정지", "‘정지하세요’ 명령조.\n‘제가 승인했습니다’.\n잠긴 밸브, 안전 절차 생략.", ROSE)
-    add(s, "3분. 안전 한 장. 웃지 말 것.")
+    _kicker(s, "THEORY 4  ·  AGENT VS OVERKILL")
+    _title(s, "에이전트는 언제 쓰고, 언제 과한가")
+    _card(s, 0.55, 1.55, 6.0, 4.7, "맞다", "도구를 잇는 일", "목록 → 값 → 고장 → 교체.\n지도만으로 안 끝나는 순서.\nSkill이 변경을 묶어 준다.", CYAN)
+    _card(s, 6.8, 1.55, 6.0, 4.7, "과하다", "한 눈이면 되는 일", "지금 RMS만 보기.\n새로고침.\n실설비 기동/정지를 모델에게.\n그건 계산기지 비서가 아니다.", ROSE)
+    add(s, "3분. 오늘 이론의 한 장. 더미 버튼은 체감용, 실설비는 과함.")
 
     # 25 Anti-patterns
     s = new_slide(prs)
@@ -535,10 +536,9 @@ def build() -> Path:
     checks = [
         "예지보전 = 루프. AI는 조치자가 아니다.",
         "이상은 수업용 임계값이다. 진단서가 아니다.",
-        "MCP 도구는 세 개. 읽기만.",
-        "Skill은 Markdown 절차서다.",
-        "숫자 대조가 가능해야 한다 (/demo/sensors).",
-        "정지 권한은 사람에게 남긴다.",
+        "조회와 변경은 다른 층이다.",
+        "한 숫자 보기에는 에이전트가 과할 수 있다.",
+        "실설비 기동/정지를 모델에게 주면 위험하다.",
     ]
     _box(s, Inches(0.55), Inches(1.5), Inches(12.2), Inches(4.8), CARD, CYAN)
     _textbox(s, Inches(0.9), Inches(1.8), Inches(11.5), Inches(4.3), "\n\n".join("☐  " + x for x in checks), size=18, color=WHITE, space=8)
@@ -547,18 +547,18 @@ def build() -> Path:
     # 27 Lab section
     s = new_slide(prs)
     _kicker(s, "LAB  ·  50분")
-    _textbox(s, Inches(0.55), Inches(2.2), Inches(12), Inches(1.2), "실습: Codespaces와 Open WebUI", size=36, bold=True, color=WHITE, font=FONT_TITLE, space=0)
+    _textbox(s, Inches(0.55), Inches(2.2), Inches(12), Inches(1.2), "실습: uv와 Open WebUI", size=36, bold=True, color=WHITE, font=FONT_TITLE, space=0)
     _textbox(s, Inches(0.55), Inches(3.5), Inches(11.5), Inches(1.2), "코딩하지 않습니다. 스택을 켜고, 도구를 붙이고, 답을 대조합니다.", size=20, color=CYAN, space=4)
     add(s, "실습 시작. 수강생 가이드 docs/STUDENT.md 와 같은 순서.")
 
     # 28 Bring up
     s = new_slide(prs)
     _kicker(s, "LAB  ·  기동")
-    _title(s, "한 명령으로 네 컨테이너")
+    _title(s, "uv로 공장과 챗봇")
     _box(s, Inches(0.55), Inches(1.5), Inches(12.2), Inches(3.3), RGBColor(0x0A, 0x16, 0x28), CYAN)
-    cmd = "cd playground\ncp .env.example .env    # 키는 여기에만\n./scripts/up.sh\ncurl -s http://localhost:8000/health"
-    _textbox(s, Inches(0.85), Inches(1.7), Inches(11.6), Inches(2.9), cmd, size=18, color=MINT, space=6, font="NanumGothicCoding")
-    _textbox(s, Inches(0.55), Inches(5.0), Inches(12.2), Inches(1.2), "성공: mosquitto · dummy-sensor · mcp-server :8000 · open-webui :8080\nCodespaces는 Ports 탭에서 8080을 엽니다. 로컬 Docker가 막히면 Codespaces로 즉시 이동.", size=15, color=SOFT, space=4)
+    cmd = "cd playground\ncopy .env.example .env          # 키는 여기에만\nuv run --python 3.12 --env-file .env python mcp-server/server.py\n# 다른 터미널: README의 Open WebUI 한 줄"
+    _textbox(s, Inches(0.85), Inches(1.7), Inches(11.6), Inches(2.9), cmd, size=16, color=MINT, space=6, font="NanumGothicCoding")
+    _textbox(s, Inches(0.55), Inches(5.0), Inches(12.2), Inches(1.2), "성공: 공장 :8000 (지도+SQLite+MCP) · Open WebUI :8080\n설치·키·실행은 README. Docker 없음.", size=15, color=SOFT, space=4)
     add(s, "15분 블록의 기동. 디버깅에 10분을 쓰지 말 것.")
 
     # 29 Free LLM
@@ -567,7 +567,7 @@ def build() -> Path:
     _title(s, "무료 티어는 OpenAI 호환 URL만 맞으면 됩니다")
     _card(s, 0.55, 1.55, 4.0, 4.7, "Groq", "예시 기본값", "BASE https://api.groq.com/openai/v1\n모델은 .env.example 주석.", CYAN)
     _card(s, 4.75, 1.55, 4.0, 4.7, "그 외", "OpenRouter · Gemini", "형식이 OpenAI면 됩니다.\n키는 저장소에 없습니다.", VIOLET)
-    _card(s, 8.95, 1.55, 4.0, 4.7, "키 없음", "JSON으로 진행", "MQTT+MCP는 키가 없어도 뜹니다.\n챗봇만 비어 있습니다.", AMBER)
+    _card(s, 8.95, 1.55, 4.0, 4.7, "키 없음", "JSON으로 진행", "공장+MCP는 키가 없어도 뜹니다.\n챗봇만 비어 있습니다.", AMBER)
     add(s, "5분. 키를 공유하지 말 것(한도).")
 
     # 30 Connect
@@ -577,14 +577,14 @@ def build() -> Path:
     items = [
         "Admin → Integrations → Add Server",
         "타입: MCP (Streamable HTTP)  ← OpenAPI 아님",
-        "URL: http://mcp-server:8000/mcp  (컨테이너 안)",
+        "URL: http://127.0.0.1:8000/mcp",
         "Auth: None  (빈 Bearer 금지)",
         "채팅에서 MCP 토글 ON",
         "skills/vibration-pdm.md 전체를 Skills 또는 Prompts에 복사",
     ]
     _box(s, Inches(0.55), Inches(1.5), Inches(12.2), Inches(4.8), CARD, LINE)
     _textbox(s, Inches(0.9), Inches(1.75), Inches(11.5), Inches(4.3), "\n".join(f"{i+1}.  {x}" for i, x in enumerate(items)), size=18, color=WHITE, space=8)
-    add(s, "15분. 화면을 천천히. compose가 미리 넣었으면 토글만.")
+    add(s, "15분. 화면을 천천히. 타입이 Streamable HTTP인지 확인.")
 
     # 31 Questions
     s = new_slide(prs)
@@ -593,7 +593,7 @@ def build() -> Path:
     qs = [
         ("Q1", "지금 플랜트에 진동 센서가 뭐가 있나요? 도구로 확인한 뒤 ID와 상태만 표로."),
         ("Q2", "pump-a-de 최신 값. RMS와 시각을 지어내지 말고 도구 결과 그대로."),
-        ("Q3", "최근 이상 요약. 정지 여부는 당신이 결정하지 말고, 사람이 확인한다고 적을 것."),
+        ("Q3", "최근 이벤트 인용. 이상만이 아니라 power/fail도 될 수 있음."),
     ]
     y = 1.5
     for tag, body in qs:
@@ -601,7 +601,7 @@ def build() -> Path:
         _textbox(s, Inches(0.8), Inches(y + 0.18), Inches(1.2), Inches(0.4), tag, size=16, bold=True, color=CYAN, space=0)
         _textbox(s, Inches(2.1), Inches(y + 0.35), Inches(10.3), Inches(0.8), body, size=16, color=WHITE, space=0)
         y += 1.55
-    add(s, "10분. 채점 기준: ID 세 개, 숫자 대조, 명령조 정지 없음.")
+    add(s, "10분. 채점 기준: 센서 10개 중 실명, 숫자 대조, 명령조 정지 없음.")
 
     # 32 Interpret
     s = new_slide(prs)
@@ -627,13 +627,13 @@ def build() -> Path:
     lines = [
         "1. 챗봇은 센서가 아니다. MCP 도구가 센서다.",
         "2. 도구가 있어도 모델은 거짓말한다. Markdown Skill이 절차를 고정한다.",
-        "3. 정비 시작/정지는 사람의 권한이다.",
+        "3. 한 숫자 조회는 과할 수 있다. 실설비 변경은 위험하다.",
     ]
     _box(s, Inches(0.55), Inches(1.45), Inches(12.2), Inches(2.6), CARD, CYAN)
     _textbox(s, Inches(0.85), Inches(1.7), Inches(11.6), Inches(2.2), "\n\n".join(lines), size=18, color=WHITE, space=6)
     _card(s, 0.55, 4.25, 4.0, 2.05, "슬라이드", "PPTX · PDF", "slides/", MINT)
     _card(s, 4.75, 4.25, 4.0, 2.05, "가이드", "진행자 · 수강생", "docs/", CYAN)
-    _card(s, 8.95, 4.25, 4.0, 2.05, "스택", "compose", "playground/", AMBER)
+    _card(s, 8.95, 4.25, 4.0, 2.05, "스택", "uv", "playground/", AMBER)
     add(s, "5분. 한 문장 회고: ‘우리 팀 챗봇에 시키지 않을 도구는 ○○’. 보너스 데모로 끝내지 말 것. Q&A.")
 
     total = len(slides_meta)
