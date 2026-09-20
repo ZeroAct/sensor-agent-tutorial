@@ -4,10 +4,19 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "fastmcp>=2.9.0,<3",
+    "open-webui==0.11.3",
 ]
+
+[project.scripts]
+open-webui = "start_webui:main"
+plant = "start_plant:main"
 
 [dependency-groups]
 dev = ["pytest"]
 
-[tool.uv]
-package = false
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["start_webui", "start_plant"]

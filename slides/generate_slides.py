@@ -556,7 +556,7 @@ def build() -> Path:
     _kicker(s, "LAB  ·  기동")
     _title(s, "uv로 공장과 챗봇")
     _box(s, Inches(0.55), Inches(1.5), Inches(12.2), Inches(3.3), RGBColor(0x0A, 0x16, 0x28), CYAN)
-    cmd = "cd playground\ncopy .env.example .env          # 키는 여기에만\nuv run --python 3.12 --env-file .env python mcp-server/server.py\n# 다른 터미널: README의 Open WebUI 한 줄"
+    cmd = "cd playground\ncopy .env.example .env     # 키만 붙이기\nuv run plant\nuv run open-webui"
     _textbox(s, Inches(0.85), Inches(1.7), Inches(11.6), Inches(2.9), cmd, size=16, color=MINT, space=6, font="NanumGothicCoding")
     _textbox(s, Inches(0.55), Inches(5.0), Inches(12.2), Inches(1.2), "성공: 공장 :8000 (지도+SQLite+MCP) · Open WebUI :8080\n설치·키·실행은 README. Docker 없음.", size=15, color=SOFT, space=4)
     add(s, "15분 블록의 기동. 디버깅에 10분을 쓰지 말 것.")

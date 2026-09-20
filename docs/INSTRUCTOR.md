@@ -42,10 +42,10 @@
 - [ ] `fail_asset pump-a` 후 지도가 빨개지고, `replace_asset` 후 새 시리얼이 나온다
 - [ ] 슬라이드 PDF를 프로젝터 백업으로 연다 (애니메이션 없음)
 - [ ] 플랜 B: LLM 없이 `/demo/sensors` JSON을 화면 공유할 브라우저 탭
-- [ ] 워크숍용 Open WebUI는 `WEBUI_AUTH=false`인지 확인 (관리자 부담 제거)
+- [ ] 워크숍용 Open WebUI는 `uv run open-webui`로 켰는지 확인 (Groq·MCP·20B·제목생성 OFF가 기동 때 들어감)
 - [ ] 수강생에게 **각자 키**를 가져오라고 공지. 공유 키 하나를 쓰면 한도에 더 빨리 걸린다
 
-Open WebUI 첫 `uv run`은 패키지가 커서 몇 분 걸립니다. 강의 전에 한 번 받아 두세요.
+Open WebUI 첫 `uv run open-webui`는 패키지가 커서 몇 분 걸립니다. 강의 전에 한 번 받아 두세요.
 
 ---
 
@@ -59,7 +59,7 @@ Open WebUI 첫 `uv run`은 패키지가 커서 몇 분 걸립니다. 강의 전�
 | 33–50 | 이론4 설계 원칙 (~17분) **깊게** | 20–26 | Skill, 작은 도구, **에이전트 vs 과함**, 더미 변경 vs 실설비 |
 | 50–55 | 휴식 또는 환경 점검 | — | 키 없는 사람 돕기. 5분을 넘기지 말 것 |
 | 55–70 | 스택 기동 | 27–29 | uv, `.env` 키, :8000 / :8080 |
-| 70–85 | MCP + Skill | 30–31 | Integrations에 MCP, Skill 붙여 질문 3개 |
+| 70–85 | MCP + Skill | 30–31 | Dummy Plant ON 확인, Skill 붙여 질문 3개 |
 | 85–95 | 해석 + 리스크 | 32–33 | 현장 언어, 숫자 대조, 429와 관리자 이슈 |
 | 95–100 | 닫기 | 34 | 한 문장 회고, Q&A, 자료 위치 |
 
@@ -270,15 +270,14 @@ Open WebUI 첫 `uv run`은 패키지가 커서 몇 분 걸립니다. 강의 전�
 
 ### 연결 (15분)
 
-화면을 천천히 클릭합니다. 관리자 메뉴 이름이 버전마다 조금 다릅니다.
+`uv run open-webui`가 Groq, Dummy Plant MCP, `gpt-oss-20b`를 이미 넣습니다. Admin에서 MCP를 다시 추가하지 마세요.
 
-1. Open WebUI → **Admin → External Tools / Integrations**
-2. Add Server → 타입 **MCP (Streamable HTTP)** (OpenAPI가 아님)
-3. URL: `http://127.0.0.1:8000/mcp`
-4. Auth: **None** (Bearer 빈 칸은 실패 사례가 많음)
-5. 채팅창에서 해당 MCP 도구를 켠다
-6. Skill Markdown을 **Workspace → Skills** 또는 **Prompt**에 그대로 붙여 넣는다  
+1. Open WebUI 새 채팅 → 모델 **GPT OSS 20B**
+2. 도구 **Dummy Plant** ON (꺼져 있으면 켭니다)
+3. Skill Markdown을 **Workspace → Skills** 또는 **Prompt**에 그대로 붙여 넣는다
    Python Function을 만들지 말라고 한 번 더 말한다
+
+이론에서 “원래는 Admin → Integrations에 MCP를 붙인다”는 한 줄로만 보여 줍니다.
 
 ### 질문 (10분)
 
@@ -316,8 +315,8 @@ Open WebUI 첫 `uv run`은 패키지가 커서 몇 분 걸립니다. 강의 전�
 | 증상 | 원인 후보 | 진행자가 할 일 |
 | --- | --- | --- |
 | Open WebUI가 모델 목록 없음 | `.env` 키/베이스 URL | 키 없이 실습하지 말 것. README 예제를 다시 보여 주기 |
-| 채팅 429 / 빈 답 | 무료 한도 | `/demo/sensors` 화면 공유. 수업 계속 |
-| MCP 연결 실패 | 타입 OpenAPI, Bearer 공란 | Streamable HTTP, `http://127.0.0.1:8000/mcp`, Auth None |
+| 채팅 429 / 빈 답 | Groq 무료 TPM 8000. 도구 JSON+제목생성 | 새 채팅, 30초 대기. `uv run open-webui`가 제목생성을 끔. 그래도면 `/demo/sensors` |
+| MCP 연결 실패 | 공장 미기동, Dummy Plant OFF | `:8000` 확인. 채팅에서 Dummy Plant 켜기. Admin에 다시 추가하지 말 것 |
 | 도구를 안 부름 | 채팅에서 MCP 토글 Off, Skill 없음 | 토글 + Skill 붙여 넣기 + “도구를 먼저 호출해” 한 줄 |
 | 센서가 항상 normal | 이상 주기 전에 질문 | 10초 대기 후 `get_recent_events` 재호출 |
 | 8000/8080이 안 열림 | 포트 사용 중, uv 미설치 | `uv --version`, 다른 프로세스 `Ctrl+C` 후 재실행 |

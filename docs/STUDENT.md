@@ -28,15 +28,18 @@
 - 공장 http://localhost:8000
 - 챗봇 http://localhost:8080
 
-로그인 화면이 나오면 진행자에게 알리세요 (`WEBUI_AUTH=false`가 기본).
+로그인 화면이 나오면 진행자에게 알리세요 (`uv run open-webui`는 로그인을 끕니다).
 
 ### MCP
 
-1. **Admin → External Tools / Integrations → Add**
-2. 타입: **MCP (Streamable HTTP)** (OpenAPI 아님)
-3. URL: `http://127.0.0.1:8000/mcp`
-4. Auth: **None**
-5. 새 채팅에서 MCP 토글 ON
+기동하면 Dummy Plant MCP (`http://127.0.0.1:8000/mcp`)가 이미 붙어 있습니다. Admin에서 다시 추가하지 마세요.
+
+새 채팅에서:
+
+1. 모델 **GPT OSS 20B**
+2. 도구 **Dummy Plant** ON
+
+꺼져 있으면 채팅 도구 목록에서 켭니다.
 
 ### Skill
 
@@ -90,8 +93,9 @@ curl -s http://localhost:8000/demo/events
 
 ## 막힐 때
 
-- **모델 없음 / 오류** — `.env`의 `OPENAI_API_KEY`, `OPENAI_API_BASE_URL`, `OPENAI_API_MODEL`. 무료 티어 **429**면 JSON `curl`로 이어 가세요.
-- **MCP 실패** — 타입 Streamable HTTP, URL `...:8000/mcp`, Auth None, 채팅 토글 ON.
+- **모델 없음 / 오류** — `.env`의 `OPENAI_API_KEY`, `OPENAI_API_BASE_URL`, `OPENAI_API_MODEL`. Groq 무료는 `openai/gpt-oss-20b` (도구 호출됨). `llama-3.1-8b-instant`는 404.
+- **429 TPM** — 도구는 됐는데 답이 안 나오면 Groq 무료 **8000 TPM**. 새 채팅에서 한 도구만, 약 30초 뒤 다시.
+- **MCP 실패** — 공장 `:8000`이 떠 있는지, 채팅에서 Dummy Plant ON인지. Admin에 다시 추가하지 말 것.
 - **센서가 항상 정상** — 약 10초마다 스파이크. 같은 센서 3회면 트립. 잠시 뒤 질문 3을 다시.
 
 ---

@@ -44,185 +44,188 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 mcp = FastMCP(
     "dummy-plant",
     instructions=(
-        "Classroom dummy plant. Always call a tool for live numbers and state. "
-        "Never invent RMS, serials, timestamps, or IDs. "
-        "Write tools (set_asset_power, fail_asset, replace_asset) change THIS "
-        "sandbox only. They are not a real maintenance permit. "
-        "request_fix asks a human worker; it does not apply the wrench. "
-        "The worker Accepts on http://localhost:8000 . Then re-read the asset. "
-        "After a write, read the asset or sensor again to confirm. "
-        "If a machine is off or failed, last_reason explains why. "
-        "Three vibration anomalies on the same sensor/generation trip the asset. "
-        "FIX resets counts (same serial) and can run before a trip."
+        "Dummy plant. Call a tool for live numbers; never invent them. "
+        "One tool per turn. request_fix asks a worker; Accept is on "
+        "http://localhost:8000. Writes affect this sandbox only."
     ),
 )
 
 
-def _pretty(data: object) -> str:
-    return json.dumps(data, ensure_ascii=False, indent=2)
+def _num(value: object) -> object:
+    if isinstance(value, float):
+        return round(value, 2)
+    return value
+
+
+def _dump(data: object) -> str:
+    return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+
+
+def _sensor_brief(row: dict) -> dict:
+    return {
+        "sensor_id": row["sensor_id"],
+        "asset_id": row["asset_id"],
+        "rms_mm_s": _num(row.get("last_rms_mm_s")),
+        "status": row.get("last_status"),
+        "anoms": int(row.get("anomaly_count") or 0),
+        "power": row.get("asset_power"),
+        "health": row.get("asset_health"),
+    }
+
+
+def _asset_brief(row: dict, *, detail: bool = False) -> dict:
+    pending = row.get("pending_fix")
+    out = {
+        "asset_id": row["asset_id"],
+        "serial": row.get("serial"),
+        "power": row.get("power"),
+        "health": row.get("health"),
+        "anoms": int(row.get("anomaly_total") or 0),
+        "last_reason": row.get("last_reason"),
+        "sensors": row.get("sensor_ids"),
+    }
+    if pending:
+        out["pending_fix"] = {
+            "request_id": pending.get("request_id"),
+            "note": pending.get("note") or "",
+        }
+    if detail:
+        out["anoms_by_sensor"] = row.get("anomaly_counts") or {}
+        if row.get("last_fix_at"):
+            out["last_fix_at"] = row["last_fix_at"]
+    return out
+
+
+def _event_brief(row: dict) -> dict:
+    return {
+        "kind": row.get("kind"),
+        "asset_id": row.get("asset_id"),
+        "sensor_id": row.get("sensor_id"),
+        "ts": row.get("ts"),
+        "detail": row.get("detail"),
+    }
+
+
+def _reading_brief(row: dict) -> dict:
+    return {
+        "sensor_id": row.get("sensor_id"),
+        "asset_id": row.get("asset_id"),
+        "rms_mm_s": _num(row.get("rms_mm_s")),
+        "peak_g": _num(row.get("peak_g")),
+        "temp_c": _num(row.get("temperature_c")),
+        "status": row.get("status"),
+        "ts": row.get("ts"),
+    }
+
+
+def _fix_brief(row: dict) -> dict:
+    return {
+        "request_id": row.get("request_id"),
+        "asset_id": row.get("asset_id"),
+        "status": row.get("status"),
+        "note": row.get("note") or "",
+    }
+
+
+def _result_brief(result: dict) -> str:
+    out = {key: value for key, value in result.items() if key != "note"}
+    if isinstance(out.get("asset"), dict):
+        out["asset"] = _asset_brief(out["asset"], detail=True)
+    if isinstance(out.get("request"), dict):
+        out["request"] = _fix_brief(out["request"])
+    return _dump(out)
 
 
 @mcp.tool
 def list_assets() -> str:
-    """List equipment instances: power, health, serial, last_reason, anomaly counts.
-
-    Call this when the user asks which machines exist, what is running,
-    which unit failed, or why something turned off.
-    """
-    return _pretty(
-        {
-            "note": "Dummy equipment instances. Side effects are recorded in SQLite.",
-            "plant": "dummy-cooling-plant",
-            "assets": plant.snapshot_assets(),
-        }
-    )
+    """List machines: power, health, serial, reason, anomaly counts."""
+    return _dump({"assets": [_asset_brief(row) for row in plant.snapshot_assets()]})
 
 
 @mcp.tool
 def list_sensors() -> str:
-    """List vibration sensors, last RMS, and the parent asset state."""
-    return _pretty(
-        {
-            "note": "Dummy classroom plant. Live values, not invented by the model.",
-            "plant": "dummy-cooling-plant",
-            "view": "top-down",
-            "sensors": plant.snapshot_sensors(),
-        }
-    )
+    """List sensors with live RMS, status, and parent asset power/health."""
+    return _dump({"sensors": [_sensor_brief(row) for row in plant.snapshot_sensors()]})
 
 
 @mcp.tool
 def get_asset(asset_id: str) -> str:
-    """Return one equipment instance: power, health, last_reason, anomaly counts.
-
-    Use this to explain why a machine is off or failed. last_reason is
-    persisted in SQLite (ui / mcp / trip).
-    """
+    """One machine: power, health, last_reason, anoms_by_sensor, pending_fix."""
     wanted = (asset_id or "").strip()
     if not wanted:
-        return _pretty({"error": "asset_id is required", "known_assets": asset_ids()})
+        return _dump({"error": "asset_id is required", "known_assets": asset_ids()})
     row = plant.get_asset_state(wanted)
     if row is None:
-        return _pretty(
-            {
-                "error": "unknown asset_id",
-                "asset_id": wanted,
-                "known_assets": asset_ids(),
-            }
-        )
-    return _pretty({"note": "Dummy equipment instance from SQLite.", "asset": row})
+        return _dump({"error": "unknown asset_id", "asset_id": wanted, "known_assets": asset_ids()})
+    return _dump(_asset_brief(row, detail=True))
 
 
 @mcp.tool
 def get_vibration_reading(sensor_id: str) -> str:
-    """Return the latest vibration reading for one sensor.
-
-    Known ids come from list_sensors. The protagonist spike sensor is pump-a-de.
-    """
+    """Latest RMS for one sensor. Known ids come from list_sensors."""
     wanted = (sensor_id or "").strip()
     if not wanted:
-        return _pretty({"error": "sensor_id is required"})
+        return _dump({"error": "sensor_id is required"})
     row = plant.latest_reading(wanted)
     if row is None:
-        return _pretty(
-            {
-                "error": "no reading yet for this sensor_id",
-                "sensor_id": wanted,
-                "known_sensors": sensor_ids(),
-            }
-        )
-    return _pretty({"note": "Latest dummy reading from SQLite.", "reading": row})
+        return _dump({"error": "no reading yet", "sensor_id": wanted, "known_sensors": sensor_ids()})
+    return _dump(_reading_brief(row))
 
 
 @mcp.tool
-def get_recent_events(limit: int = 10, kind: str = "", asset_id: str = "") -> str:
-    """Return recent plant events: anomaly, power, fail, replace, fix, fix_request.
-
-    Omit kind for the mixed log. Pass asset_id to read one equipment's log.
-    Use kind='anomaly' for vibration alarms only.
-    """
+def get_recent_events(limit: int = 5, kind: str = "", asset_id: str = "") -> str:
+    """Recent events. Optional kind=anomaly|power|fail|replace|fix, asset_id=one machine."""
     wanted_kind = (kind or "").strip() or None
     wanted_asset = (asset_id or "").strip() or None
-    rows = plant.recent_events(limit, kind=wanted_kind, asset_id=wanted_asset)
-    return _pretty(
-        {
-            "note": "Persisted dummy events. Filter with asset_id for one machine.",
-            "kind": wanted_kind or "all",
-            "asset_id": wanted_asset or "all",
-            "count": len(rows),
-            "events": rows,
-        }
-    )
+    cap = max(1, min(int(limit or 5), 8))
+    rows = plant.recent_events(cap, kind=wanted_kind, asset_id=wanted_asset)
+    return _dump({"events": [_event_brief(row) for row in rows]})
 
 
 @mcp.tool
 def set_asset_power(asset_id: str, on: bool) -> str:
-    """Turn one dummy equipment instance on or off.
-
-    Failed instances cannot be turned on; a worker must Accept FIX or call replace_asset.
-    Confirm with list_assets afterwards.
-    """
+    """Turn one dummy machine on or off. Failed units stay off until FIX or replace."""
     wanted = (asset_id or "").strip()
     if not wanted:
-        return _pretty({"error": "asset_id is required", "known_assets": asset_ids()})
-    return _pretty(plant.set_asset_power(wanted, bool(on), source="mcp"))
+        return _dump({"error": "asset_id is required", "known_assets": asset_ids()})
+    return _result_brief(plant.set_asset_power(wanted, bool(on), source="mcp"))
 
 
 @mcp.tool
 def fail_asset(asset_id: str) -> str:
-    """Mark one dummy instance as failed. It trips off until FIX or replace."""
+    """Mark one dummy machine failed. It stays off until FIX or replace."""
     wanted = (asset_id or "").strip()
     if not wanted:
-        return _pretty({"error": "asset_id is required", "known_assets": asset_ids()})
-    return _pretty(plant.fail_asset(wanted))
+        return _dump({"error": "asset_id is required", "known_assets": asset_ids()})
+    return _result_brief(plant.fail_asset(wanted))
 
 
 @mcp.tool
 def replace_asset(asset_id: str) -> str:
-    """Swap a failed dummy instance for a new serial and start it.
-
-    Only works when health is failed. Returns the new serial/generation.
-    """
+    """Replace a failed dummy machine with a new serial. Health must be failed."""
     wanted = (asset_id or "").strip()
     if not wanted:
-        return _pretty({"error": "asset_id is required", "known_assets": asset_ids()})
-    return _pretty(plant.replace_asset(wanted))
+        return _dump({"error": "asset_id is required", "known_assets": asset_ids()})
+    return _result_brief(plant.replace_asset(wanted))
 
 
 @mcp.tool
 def request_fix(asset_id: str, note: str = "") -> str:
-    """Ask a human worker to FIX one dummy asset. Does not apply the repair.
-
-    The request appears on the factory map. The worker clicks Accept.
-    Use this instead of pretending to maintain the machine. FIX may be
-    preventive (before 3 anomalies) or after a trip. Same serial; counts reset.
-    Re-read list_fix_requests or get_asset after the worker accepts.
-    """
+    """Ask a worker to FIX. Does not repair. Worker Accepts on the factory map."""
     wanted = (asset_id or "").strip()
     if not wanted:
-        return _pretty({"error": "asset_id is required", "known_assets": asset_ids()})
-    return _pretty(plant.request_fix(wanted, note=note or "", source="mcp"))
+        return _dump({"error": "asset_id is required", "known_assets": asset_ids()})
+    return _result_brief(plant.request_fix(wanted, note=note or "", source="mcp"))
 
 
 @mcp.tool
 def list_fix_requests(status: str = "pending") -> str:
-    """List worker FIX requests. Default status is pending.
-
-    After request_fix, poll this (or tell the user to Accept on the map)
-    until status is accepted. Do not claim the machine was fixed until then.
-    """
+    """Worker FIX queue. Default pending. Do not claim fixed until accepted."""
     wanted = (status or "").strip() or "pending"
     if wanted == "all":
         wanted = None
     rows = plant.snapshot_fix_requests(wanted)
-    return _pretty(
-        {
-            "note": "Dummy work queue. Accept happens on the factory screen, not in this tool.",
-            "status": wanted or "all",
-            "count": len(rows),
-            "requests": rows,
-        }
-    )
+    return _dump({"requests": [_fix_brief(row) for row in rows]})
 
 
 @mcp.custom_route("/", methods=["GET"])

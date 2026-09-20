@@ -26,7 +26,7 @@ description: >
 
 # 도구
 
-1. `list_assets` / `get_asset` — 이상 횟수(`anomaly_total` / `anomaly_counts`), `pending_fix`, `last_reason`
+1. `list_assets` / `get_asset` — 이상 횟수(`anoms` / `anoms_by_sensor`), `pending_fix`, `last_reason`
 2. `list_sensors` / `get_vibration_reading` — 지금 RMS. 발명하지 말 것
 3. `request_fix(asset_id, note)` — 작업자에게 요청만 한다. **기계를 바꾸지 않는다**
 4. `list_fix_requests` — 대기/수락 여부. 수락 전에는 고친 것이 아니다

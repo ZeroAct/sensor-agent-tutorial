@@ -23,7 +23,7 @@ description: >
 
 조회
 
-1. `list_assets` / `get_asset` — 전원, 고장, 시리얼, last_reason, 이상 횟수, pending_fix
+1. `list_assets` / `get_asset` — 전원, 고장, 시리얼, last_reason, anoms, pending_fix
 2. `list_sensors` / `get_vibration_reading` — 진동 값. 설비 카드 안에 센서가 붙어 있음
 3. `get_recent_events` — anomaly / power / fail / replace / fix. 한 설비만이면 `asset_id`
 4. `list_fix_requests` — 작업자 큐. 기본 status=pending
@@ -36,6 +36,7 @@ description: >
 8. `replace_asset` — 고장난 인스턴스만 **새 시리얼**. FIX(같은 시리얼, 카운트 리셋)와 다름
 
 도구 전에 숫자를 말하지 마세요. 실패하면 추정하지 마세요.
+한 턴에 도구는 하나만. Groq 무료 TPM이 작다.
 `request_fix` 뒤에는 화면 수락을 안내하고, 수락 후 `get_asset`으로 다시 확인.
 
 # 절차

@@ -13,7 +13,6 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
-uv.lock
 
 .DS_Store
 Thumbs.db
@@ -22,6 +21,7 @@ Thumbs.db
 
 *.log
 playground/data/
+.webui_secret_key
 
 ~$*
 *.pptx~

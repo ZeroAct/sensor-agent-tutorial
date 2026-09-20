@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -221,3 +222,60 @@ def test_reset_plant_wipes_history(tmp_path):
     assert assets["fan-b"]["generation"] == 1
     assert assets["pump-a"]["anomaly_total"] == 0
     assert plant.factory_snapshot()["sensor_count"] == 10
+
+
+def test_mcp_list_payloads_fit_groq_free_tpm(tmp_path):
+    plant.configure(tmp_path / "plant.db")
+    plant.tick()
+    import server
+
+    sensors = server._dump(
+        {"sensors": [server._sensor_brief(row) for row in plant.snapshot_sensors()]}
+    )
+    assets = server._dump(
+        {"assets": [server._asset_brief(row) for row in plant.snapshot_assets()]}
+    )
+    sensor_row = json.loads(sensors)["sensors"][0]
+    assert set(sensor_row) <= {
+        "sensor_id",
+        "asset_id",
+        "rms_mm_s",
+        "status",
+        "anoms",
+        "power",
+        "health",
+    }
+    assert len(sensors) < 1400
+    assert len(assets) < 1800
+    assert "\n" not in sensors
+    reading = json.loads(server._dump(server._reading_brief(plant.latest_reading("pump-a-de"))))
+    assert "rms_mm_s" in reading
+    assert "id" not in reading
+
+
+def test_webui_workshop_defaults_include_mcp_and_groq_tpm_guards(monkeypatch, tmp_path):
+    monkeypatch.delenv("OPENAI_API_MODEL", raising=False)
+    monkeypatch.delenv("OPENAI_API_BASE_URL", raising=False)
+    monkeypatch.delenv("MCP_URL", raising=False)
+    monkeypatch.setenv("DATA_DIR", str(tmp_path / "open-webui"))
+    import start_webui
+
+    settings = start_webui.workshop_settings()
+    connections = json.loads(settings["TOOL_SERVER_CONNECTIONS"])
+    assert connections[0]["type"] == "mcp"
+    assert connections[0]["url"].endswith("/mcp")
+    assert connections[0]["info"]["id"] == "dummy-plant"
+    assert settings["ENABLE_OLLAMA_API"] == "false"
+    assert settings["ENABLE_TITLE_GENERATION"] == "false"
+    assert settings["ENABLE_FOLLOW_UP_GENERATION"] == "false"
+    assert settings["ENABLE_PERSISTENT_CONFIG"] == "false"
+    assert settings["WEBUI_AUTH"] == "false"
+    assert settings["ENABLE_LOGIN_FORM"] == "false"
+    assert settings["DEFAULT_MODELS"] == "openai/gpt-oss-20b"
+    assert "server:mcp:dummy-plant" in settings["DEFAULT_INTERFACE_SETTINGS"]
+    import tomllib
+
+    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    assert "open-webui==0.11.3" in pyproject["project"]["dependencies"]
+    assert pyproject["project"]["scripts"]["open-webui"] == "start_webui:main"
+    assert pyproject["project"]["scripts"]["plant"] == "start_plant:main"
