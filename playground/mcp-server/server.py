@@ -242,17 +242,30 @@ async def factory_page(_request: Request) -> FileResponse:
     return FileResponse(STATIC_DIR / "factory.html")
 
 
+class _FactorySSE(StreamingResponse):
+    """SSE that exits quietly when uvicorn cancels the map tab on Ctrl+C."""
+
+    async def listen_for_disconnect(self, receive) -> None:  # type: ignore[override]
+        try:
+            await super().listen_for_disconnect(receive)
+        except asyncio.CancelledError:
+            return
+
+
 @mcp.custom_route("/factory/events", methods=["GET"])
 async def factory_events(request: Request) -> StreamingResponse:
     async def gen():
-        while True:
-            if await request.is_disconnected():
-                break
-            payload = json.dumps(plant.factory_snapshot(), ensure_ascii=False)
-            yield f"data: {payload}\n\n"
-            await asyncio.sleep(1.0)
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                payload = json.dumps(plant.factory_snapshot(), ensure_ascii=False)
+                yield f"data: {payload}\n\n"
+                await asyncio.sleep(1.0)
+        except (asyncio.CancelledError, ConnectionError, GeneratorExit):
+            return
 
-    return StreamingResponse(
+    return _FactorySSE(
         gen(),
         media_type="text/event-stream",
         headers={
@@ -339,7 +352,13 @@ def main() -> None:
     plant.start_feed()
     print(f"factory map     http://{HOST}:{PORT}/", flush=True)
     print("Claude Desktop:  other terminal → uv run claude-config, then fully quit Claude", flush=True)
-    mcp.run(transport="http", host=HOST, port=PORT, path=PATH)
+    mcp.run(
+        transport="http",
+        host=HOST,
+        port=PORT,
+        path=PATH,
+        uvicorn_config={"timeout_graceful_shutdown": 2},
+    )
 
 
 if __name__ == "__main__":

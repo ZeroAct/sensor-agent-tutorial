@@ -38,7 +38,7 @@
 - [ ] [README](../README.md)대로 `uv run plant` 한 번 성공, 공장 :8000
 - [ ] **본인 PC**에 Claude Desktop이 있고, `uv run claude-config` 후 dummy-plant가 보인다
 - [ ] `curl -s http://localhost:8000/health` → `"ok": true`
-- [ ] 더미 센서가 10~20초 안에 이상을 한 번 낸다 (기본 `ANOMALY_EVERY_SEC=10`). 같은 센서 3회면 트립
+- [ ] 더미 센서가 10~20초 안에 이상을 한 번 낸다 (기본 `ANOMALY_EVERY_SEC=10`). 같은 센서 5회면 트립. 가끔 다른 설비가 랜덤 이슈로 고장
 - [ ] `fail_asset pump-a` 후 지도가 빨개지고, `replace_asset` 후 새 시리얼이 나온다
 - [ ] 슬라이드 PDF를 프로젝터 백업으로 연다 (애니메이션 없음)
 - [ ] 플랜 B: Claude 없이 `/demo/sensors` JSON을 화면 공유할 브라우저 탭
@@ -152,7 +152,7 @@ Claude Desktop은 강의 전에 한 번 재시작해 두고, dummy-plant 도구�
    - 경고 4.5 / 이상 7.0 = **수업용 숫자**, 현장 기준 아님
    - “왜 RMS?” → “한 숫자로 크기를 말하려고. 주파수 분석은 오늘 범위 밖.”
 3. **(3분) 이상 = 임계값 초과 (딥러닝 아님)**
-   - 약 10초마다 스파이크, 같은 센서 3회면 해당 설비 트립
+   - 약 10초마다 스파이크, 같은 센서 5회면 해당 설비 트립. 랜덤 이슈로 다른 설비도 갑자기 고장이 날 수 있다
    - 현업 언어: RMS↑ = “상태가 나빠지고 있다” (원인 단정 금지)
    - normal / warning / anomaly 읽는 법 (안전 인증 아님)
 4. **(2분) 체크 + 실습 예고**
@@ -271,7 +271,7 @@ Claude Desktop은 강의 전에 한 번 재시작해 두고, dummy-plant 도구�
 
 `uv run claude-config`가 dummy-plant를 Claude 설정에 넣습니다. 수강생이 JSON을 손으로 고치지 않게 합니다.
 
-1. Claude Desktop을 트레이까지 종료한 뒤 다시 연다
+1. Claude Desktop을 완전히 종료한 뒤 다시 연다 (Windows 트레이 / Mac `Cmd+Q`)
 2. Settings → Developer 에서 **dummy-plant** 확인
 3. Skill Markdown을 프로젝트 지시 또는 첫 메시지에 그대로 붙여 넣는다
    로컬 Python Tool을 만들지 말라고 한 번 더 말한다
@@ -304,7 +304,7 @@ Claude Desktop은 강의 전에 한 번 재시작해 두고, dummy-plant 도구�
 
 리스크 두 개를 경험과 연결합니다.
 
-- dummy-plant가 안 보이는 사람 → 창피하지 않다. 트레이까지 종료. 그래도 안 되면 `curl` JSON
+- dummy-plant가 안 보이는 사람 → 창피하지 않다. 완전히 종료 (Win 트레이 / Mac Cmd+Q). 그래도 안 되면 `curl` JSON
 - Desktop 설치가 막힌 사람 → 짝/진행자 화면. 공장 지도는 계정 없이 됨
 
 ---
@@ -313,7 +313,7 @@ Claude Desktop은 강의 전에 한 번 재시작해 두고, dummy-plant 도구�
 
 | 증상 | 원인 후보 | 진행자가 할 일 |
 | --- | --- | --- |
-| dummy-plant 없음 | Claude를 재시작하지 않음, uv 상대 경로 | `uv run claude-config` 후 트레이까지 종료. README |
+| dummy-plant 없음 | Claude를 재시작하지 않음 | `uv run claude-config` 후 완전 종료. README (Win/Mac) |
 | 도구 호출 실패 | 공장 미기동 | `:8000` 확인. 다른 터미널에서 `uv run plant` |
 | 답을 지어냄 | Skill 없음 | Skill 붙여 넣기 + “도구를 먼저 호출해” 한 줄 |
 | 센서가 항상 normal | 이상 주기 전에 질문 | 10초 대기 후 `get_recent_events` 재호출 |

@@ -95,7 +95,7 @@
     }
     .row.pending { border-color: var(--warning); }
     .row.failed { border-color: var(--anomaly); }
-    .row.selected { border-color: var(--cyan); }
+    .row.selected { box-shadow: inset 3px 0 0 var(--cyan); }
     .row { cursor: pointer; }
     .row-top { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
     .row-top b { font-size: 12px; flex: 0 0 auto; }
@@ -400,7 +400,7 @@
         const meta = document.createElement("div");
         meta.className = "meta";
         const n = req.anomaly_total || 0;
-        const trip = req.trip_anomaly_count || 3;
+        const trip = req.trip_anomaly_count || 5;
         meta.textContent = `${req.note || "작업자 FIX 요청"} · 이상 ${n}/${trip}`;
         left.append(b, meta);
         const btns = document.createElement("div");
@@ -426,7 +426,7 @@
           health: sensor.asset_health,
           power: sensor.asset_power,
           anomaly_total: 0,
-          trip_anomaly_count: 3,
+          trip_anomaly_count: 5,
           pending_fix: null,
           last_reason: null,
         };
@@ -478,7 +478,7 @@
         const ss = document.createElement("span");
         const status = sensor.last_status || "idle";
         ss.className = `status ${status}`;
-        ss.textContent = `${status} ${sensor.anomaly_count || 0}/${sensor.trip_anomaly_count || 3}`;
+        ss.textContent = `${status} ${sensor.anomaly_count || 0}/${sensor.trip_anomaly_count || 5}`;
         chip.append(rms, ss);
         chips.appendChild(chip);
         row.appendChild(chips);
@@ -505,11 +505,14 @@
     async function boot() {
       const res = await fetch("/demo/factory");
       render(await res.json());
-      const src = new EventSource("/factory/events");
+      let src = new EventSource("/factory/events");
       const link = document.getElementById("link");
       src.onopen = () => { link.textContent = "SSE live"; link.className = "pill ok"; };
       src.onerror = () => { link.textContent = "SSE 재연결"; link.className = "pill bad"; };
       src.onmessage = (ev) => render(JSON.parse(ev.data));
+      window.addEventListener("pagehide", () => {
+        try { src.close(); } catch (_) { /* ignore */ }
+      });
       document.getElementById("reset-db").addEventListener("click", async () => {
         if (!window.confirm("SQLite를 전부 지우고 설비를 다시 켭니다. 로그·이상 횟수도 사라집니다.")) return;
         await post("/demo/reset", {});

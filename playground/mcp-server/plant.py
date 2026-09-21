@@ -36,12 +36,14 @@ from factory_catalog import (
 PUBLISH_INTERVAL_SEC = float(os.getenv("PUBLISH_INTERVAL_SEC", "2"))
 ANOMALY_EVERY_SEC = float(os.getenv("ANOMALY_EVERY_SEC", "10"))
 ANOMALY_HOLD_SEC = float(os.getenv("ANOMALY_HOLD_SEC", "6"))
-TRIP_ANOMALY_COUNT = int(os.getenv("TRIP_ANOMALY_COUNT", "3"))
+TRIP_ANOMALY_COUNT = int(os.getenv("TRIP_ANOMALY_COUNT", "5"))
 WARNING_RMS_MM_S = float(os.getenv("WARNING_RMS_MM_S", "4.5"))
 ANOMALY_RMS_MM_S = float(os.getenv("ANOMALY_RMS_MM_S", "7.0"))
 MAX_READINGS_PER_SENSOR = int(os.getenv("MAX_READINGS_PER_SENSOR", "80"))
 MAX_EVENTS = int(os.getenv("MAX_EVENTS", "300"))
 SPIKE_BIAS = float(os.getenv("SPIKE_BIAS", "0.55"))
+RANDOM_ISSUE_EVERY_SEC = float(os.getenv("RANDOM_ISSUE_EVERY_SEC", "35"))
+RANDOM_ISSUE_CHANCE = float(os.getenv("RANDOM_ISSUE_CHANCE", "0.45"))
 
 POWER_OFF_REASONS = {
     "ui": "화면에서 전원을 끔",
@@ -50,7 +52,15 @@ POWER_OFF_REASONS = {
 FAIL_REASONS = {
     "mcp": "MCP fail_asset로 고장 처리",
     "trip": "진동 이상 누적 트립",
+    "random": "랜덤 이슈 트립",
 }
+RANDOM_ISSUES = (
+    {"id": "seal_leak", "reason": "씰 누설 감지 — 랜덤 이슈"},
+    {"id": "overheat", "reason": "권선 과열 트립 — 랜덤 이슈"},
+    {"id": "overload", "reason": "과부하 차단 — 랜덤 이슈"},
+    {"id": "cavitation", "reason": "캐비테이션 악화 — 랜덤 이슈"},
+    {"id": "loose_base", "reason": "기초 볼트 풀림 — 랜덤 이슈"},
+)
 
 _lock = threading.Lock()
 _conn: sqlite3.Connection | None = None
@@ -59,6 +69,7 @@ _started_at = datetime.now(timezone.utc).isoformat()
 _last_spike_at = time.monotonic()
 _active_spike_sensor: str | None = None
 _spike_until = 0.0
+_last_random_issue_at = time.monotonic()
 _feed_started = False
 
 
@@ -89,7 +100,7 @@ def _connect() -> sqlite3.Connection:
 
 def configure(db_path: str | Path) -> None:
     """Tests (and rare reroutes) point the plant at another sqlite file."""
-    global _conn, _db_path, _last_spike_at, _active_spike_sensor, _spike_until
+    global _conn, _db_path, _last_spike_at, _active_spike_sensor, _spike_until, _last_random_issue_at
     with _lock:
         if _conn is not None:
             _conn.close()
@@ -98,6 +109,7 @@ def configure(db_path: str | Path) -> None:
         _last_spike_at = time.monotonic()
         _active_spike_sensor = None
         _spike_until = 0.0
+        _last_random_issue_at = time.monotonic()
         _connect()
 
 
@@ -334,6 +346,38 @@ def _choose_spike_sensor(conn: sqlite3.Connection) -> str | None:
     return random.choice(eligible)
 
 
+def _healthy_asset_ids(conn: sqlite3.Connection) -> list[str]:
+    rows = conn.execute(
+        "SELECT asset_id FROM assets WHERE power = 'on' AND health = 'ok' ORDER BY asset_id"
+    ).fetchall()
+    return [row["asset_id"] for row in rows]
+
+
+def _apply_random_issue(conn: sqlite3.Connection, asset_id: str | None = None) -> str | None:
+    """Fail one healthy machine for a non-vibration classroom incident."""
+    wanted = (asset_id or "").strip() or None
+    if wanted:
+        row = _asset_row(conn, wanted)
+        if row is None or row["power"] != "on" or row["health"] != "ok":
+            return None
+        target = wanted
+    else:
+        choices = _healthy_asset_ids(conn)
+        if not choices:
+            return None
+        target = random.choice(choices)
+    issue = random.choice(RANDOM_ISSUES)
+    reason = f"{issue['reason']} ({target})"
+    _fail_asset_locked(
+        conn,
+        target,
+        source="random",
+        reason=reason,
+        extra={"issue_id": issue["id"], "issue": issue["reason"]},
+    )
+    return target
+
+
 def _set_reason(
     conn: sqlite3.Connection,
     asset_id: str,
@@ -414,9 +458,12 @@ def _reading_for(sensor: dict[str, Any], asset: sqlite3.Row, *, spike: bool) -> 
     }
 
 
-def tick(force_spike_sensor: str | None = None) -> None:
+def tick(
+    force_spike_sensor: str | None = None,
+    force_random_issue: str | None = None,
+) -> None:
     """Write one round of dummy readings. Safe to call from tests."""
-    global _last_spike_at, _active_spike_sensor, _spike_until
+    global _last_spike_at, _active_spike_sensor, _spike_until, _last_random_issue_at
     with _lock:
         conn = _connect()
         now = time.monotonic()
@@ -513,6 +560,22 @@ def tick(force_spike_sensor: str | None = None) -> None:
                 if owner == asset_id:
                     _active_spike_sensor = None
                     _spike_until = 0.0
+
+        do_random = False
+        random_target: str | None = None
+        if force_random_issue:
+            do_random = True
+            random_target = force_random_issue
+            _last_random_issue_at = now
+        elif (
+            not force_spike_sensor
+            and (now - _last_random_issue_at) >= RANDOM_ISSUE_EVERY_SEC
+        ):
+            _last_random_issue_at = now
+            do_random = random.random() < RANDOM_ISSUE_CHANCE
+        if do_random:
+            _apply_random_issue(conn, random_target)
+
         conn.commit()
 
 
@@ -1129,7 +1192,7 @@ def dismiss_fix(request_id: int, *, source: str = "ui") -> dict[str, Any]:
 
 def reset_plant() -> dict[str, Any]:
     """Wipe SQLite dummy history and reseed healthy equipment. UI sandbox only."""
-    global _last_spike_at, _active_spike_sensor, _spike_until
+    global _last_spike_at, _active_spike_sensor, _spike_until, _last_random_issue_at
     with _lock:
         conn = _connect()
         conn.executescript(
@@ -1149,6 +1212,7 @@ def reset_plant() -> dict[str, Any]:
         _last_spike_at = time.monotonic()
         _active_spike_sensor = None
         _spike_until = 0.0
+        _last_random_issue_at = time.monotonic()
         conn.commit()
         assets = conn.execute("SELECT COUNT(*) AS n FROM assets").fetchone()["n"]
     return {

@@ -84,10 +84,10 @@ curl -s http://localhost:8000/demo/events
 
 ## 막힐 때
 
-- **dummy-plant 없음** — `uv run claude-config` 후 Claude Desktop을 트레이까지 종료하고 재실행. `uv`는 절대 경로로 들어갑니다.
+- **dummy-plant 없음** — [README](../README.md)대로 `uv run claude-config` 후 Claude를 완전히 종료하고 재실행 (Windows 트레이 / Mac `Cmd+Q`).
 - **도구 실패** — 공장 `:8000`이 떠 있는지. 다른 터미널에서 `uv run plant`.
 - **답이 비면** — 공장 JSON은 `/demo/sensors`로 이어서 보면 됩니다.
-- **센서가 항상 정상** — 약 10초마다 스파이크. 같은 센서 3회면 트립. 잠시 뒤 질문 3을 다시.
+- **센서가 항상 정상** — 약 10초마다 스파이크. 같은 센서 5회면 트립. 랜덤 이슈로 다른 설비가 갑자기 고장 나기도 함.
 
 ---
 

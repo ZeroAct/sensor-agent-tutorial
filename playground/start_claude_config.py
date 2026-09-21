@@ -4,34 +4,23 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 SERVER_ID = "dummy-plant"
+SCRIPT = ROOT / "start_plant_mcp.py"
 
 
-def uv_executable() -> str:
-    found = shutil.which("uv")
-    if found:
-        return str(Path(found).resolve())
-    local = Path.home() / ".local" / "bin" / ("uv.exe" if os.name == "nt" else "uv")
-    if local.exists():
-        return str(local.resolve())
-    raise SystemExit("uv 를 찾지 못했습니다. 새 터미널에서 `uv --version` 후 다시 실행하세요.")
+def venv_python() -> Path:
+    if os.name == "nt":
+        return ROOT / ".venv" / "Scripts" / "python.exe"
+    return ROOT / ".venv" / "bin" / "python"
 
 
-def server_entry() -> dict:
-    return {
-        "command": uv_executable(),
-        "args": ["run", "--directory", str(ROOT), "plant-mcp"],
-    }
-
-
-def config_paths() -> list[Path]:
-    home = Path.home()
-    paths = [
+def config_candidates(home: Path | None = None) -> list[Path]:
+    home = home or Path.home()
+    windows = [
         home / "AppData" / "Roaming" / "Claude" / "claude_desktop_config.json",
         home
         / "AppData"
@@ -42,12 +31,39 @@ def config_paths() -> list[Path]:
         / "Roaming"
         / "Claude"
         / "claude_desktop_config.json",
+    ]
+    mac = [
         home / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json",
     ]
-    existing_dirs = [path for path in paths if path.parent.exists()]
-    if existing_dirs:
-        return existing_dirs
-    return [paths[0]]
+    if sys.platform == "darwin":
+        return mac
+    if os.name == "nt":
+        return windows
+    return mac + windows
+
+
+def server_entry() -> dict:
+    py = venv_python()
+    if not py.exists():
+        raise SystemExit(
+            "playground/.venv 이 없습니다. 먼저 `uv run plant` 또는 `uv sync` 후 다시 실행하세요."
+        )
+    return {
+        "command": str(py.resolve()),
+        "args": [str(SCRIPT)],
+        "cwd": str(ROOT),
+        "env": {
+            "PYTHONUNBUFFERED": "1",
+            "PYTHONIOENCODING": "utf-8",
+            "FASTMCP_SHOW_CLI_BANNER": "false",
+        },
+    }
+
+
+def config_paths() -> list[Path]:
+    paths = config_candidates()
+    existing = [path for path in paths if path.parent.exists()]
+    return existing or [paths[0]]
 
 
 def merge_config(path: Path, entry: dict) -> None:
@@ -71,10 +87,16 @@ def main() -> None:
     for path in config_paths():
         merge_config(path, entry)
         written.append(str(path))
-    print("dummy-plant MCP 를 Claude Desktop 설정에 넣었습니다.", flush=True)
+    print("dummy-plant MCP 를 Claude Desktop 설정에 넣었습니다. (stdio)", flush=True)
+    print(f"  {entry['command']}", flush=True)
+    print(f"  {entry['args'][0]}", flush=True)
     for path in written:
         print(f"  {path}", flush=True)
-    print("Claude Desktop 을 트레이까지 종료한 뒤 다시 여세요.", flush=True)
+    if sys.platform == "darwin":
+        print("Claude Desktop 을 완전히 종료하세요. 메뉴 막대 Claude → Quit Claude (Cmd+Q).", flush=True)
+        print("빨간 점만 누르면 Dock/메뉴에 남아 설정이 안 읽힙니다.", flush=True)
+    else:
+        print("Claude Desktop 을 트레이까지 종료한 뒤 다시 여세요.", flush=True)
     print("공장 지도는 다른 터미널에서 `uv run plant` 로 켭니다.", flush=True)
 
 

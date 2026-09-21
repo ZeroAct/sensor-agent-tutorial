@@ -124,24 +124,42 @@ def test_anomaly_count_stays_after_the_spike_ends(tmp_path):
     assert plant.latest_reading("pump-a-de")["status"] == "normal"
 
 
-def test_three_anomalies_trip_the_asset(tmp_path):
+def test_five_anomalies_trip_the_asset(tmp_path):
     plant.configure(tmp_path / "plant.db")
-    for _ in range(3):
+    for _ in range(4):
         plant.tick(force_spike_sensor="pump-a-de")
+    assert plant.get_asset_state("pump-a")["health"] == "ok"
+    plant.tick(force_spike_sensor="pump-a-de")
     plant.tick()
     assets = {row["asset_id"]: row for row in plant.snapshot_assets()}
     pump = assets["pump-a"]
     assert pump["health"] == "failed"
     assert pump["power"] == "off"
-    assert pump["anomaly_total"] == 3
+    assert pump["anomaly_total"] == 5
     assert pump["last_reason_source"] == "trip"
     assert "pump-a-de" in pump["last_reason"]
-    assert "3회" in pump["last_reason"]
+    assert "5회" in pump["last_reason"]
     events = plant.recent_events(kind="fail")
     assert events[0]["detail"]["source"] == "trip"
     assert plant.latest_reading("pump-a-de")["status"] == "failed"
     loaded = plant.get_asset_state("pump-a")
     assert loaded["last_reason"] == pump["last_reason"]
+
+
+def test_random_issue_fails_a_healthy_asset(tmp_path):
+    plant.configure(tmp_path / "plant.db")
+    plant.tick()
+    plant.tick(force_random_issue="fan-b")
+    asset = plant.get_asset_state("fan-b")
+    assert asset["health"] == "failed"
+    assert asset["power"] == "off"
+    assert asset["last_reason_source"] == "random"
+    assert "랜덤 이슈" in asset["last_reason"]
+    events = plant.recent_events(kind="fail")
+    assert events[0]["detail"]["source"] == "random"
+    assert events[0]["detail"]["issue_id"] in {item["id"] for item in plant.RANDOM_ISSUES}
+    pump = plant.get_asset_state("pump-a")
+    assert pump["health"] == "ok"
 
 
 def test_ui_power_off_records_reason(tmp_path):
@@ -186,7 +204,7 @@ def test_fix_before_trip_resets_counts(tmp_path):
 
 def test_accept_fix_restores_failed_same_serial(tmp_path):
     plant.configure(tmp_path / "plant.db")
-    for _ in range(3):
+    for _ in range(5):
         plant.tick(force_spike_sensor="pump-a-de")
     before = plant.get_asset_state("pump-a")
     assert before["health"] == "failed"
@@ -284,15 +302,24 @@ def test_factory_map_lists_mcp_tools():
         assert name in html
     readme = (ROOT.parent / "README.md").read_text(encoding="utf-8")
     assert "claude_desktop_config.json" in readme
-    assert "plant-mcp" in readme
+    assert "start_plant_mcp.py" in readme
     assert "uv run claude-config" in readme
 
 
-def test_claude_desktop_entry_uses_uv_and_playground(monkeypatch):
+def test_claude_desktop_entry_uses_venv_python():
     import start_claude_config
 
-    monkeypatch.setattr(start_claude_config.shutil, "which", lambda _name: r"C:\fake\uv.exe")
     entry = start_claude_config.server_entry()
-    assert entry["command"].endswith("uv.exe")
-    assert entry["args"][:3] == ["run", "--directory", str(ROOT)]
-    assert entry["args"][-1] == "plant-mcp"
+    assert entry["command"].endswith("python.exe") or entry["command"].endswith("python")
+    assert entry["args"] == [str(ROOT / "start_plant_mcp.py")]
+    assert entry["cwd"] == str(ROOT)
+    assert entry["env"]["FASTMCP_SHOW_CLI_BANNER"] == "false"
+
+
+def test_claude_config_paths_macos(tmp_path, monkeypatch):
+    import start_claude_config
+
+    monkeypatch.setattr(start_claude_config.sys, "platform", "darwin")
+    paths = start_claude_config.config_candidates(tmp_path)
+    assert len(paths) == 1
+    assert paths[0] == tmp_path / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"

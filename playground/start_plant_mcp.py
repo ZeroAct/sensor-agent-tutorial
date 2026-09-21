@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
+
+os.environ.setdefault("FASTMCP_SHOW_CLI_BANNER", "false")
+os.environ.setdefault("PYTHONUNBUFFERED", "1")
 
 
 def main() -> None:
@@ -12,7 +16,7 @@ def main() -> None:
     sys.path.insert(0, str(root))
     from server import mcp
 
-    # stdout is the MCP wire. Do not print banners here.
+    # stdout is the MCP JSON-RPC wire. Banners/logs must stay on stderr.
     mcp.run(transport="stdio")
 
 
