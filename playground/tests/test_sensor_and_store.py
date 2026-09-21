@@ -224,7 +224,7 @@ def test_reset_plant_wipes_history(tmp_path):
     assert plant.factory_snapshot()["sensor_count"] == 10
 
 
-def test_mcp_list_payloads_fit_groq_free_tpm(tmp_path):
+def test_mcp_list_payloads_are_compact(tmp_path):
     plant.configure(tmp_path / "plant.db")
     plant.tick()
     import server
@@ -253,29 +253,46 @@ def test_mcp_list_payloads_fit_groq_free_tpm(tmp_path):
     assert "id" not in reading
 
 
-def test_webui_workshop_defaults_include_mcp_and_groq_tpm_guards(monkeypatch, tmp_path):
-    monkeypatch.delenv("OPENAI_API_MODEL", raising=False)
-    monkeypatch.delenv("OPENAI_API_BASE_URL", raising=False)
-    monkeypatch.delenv("MCP_URL", raising=False)
-    monkeypatch.setenv("DATA_DIR", str(tmp_path / "open-webui"))
-    import start_webui
-
-    settings = start_webui.workshop_settings()
-    connections = json.loads(settings["TOOL_SERVER_CONNECTIONS"])
-    assert connections[0]["type"] == "mcp"
-    assert connections[0]["url"].endswith("/mcp")
-    assert connections[0]["info"]["id"] == "dummy-plant"
-    assert settings["ENABLE_OLLAMA_API"] == "false"
-    assert settings["ENABLE_TITLE_GENERATION"] == "false"
-    assert settings["ENABLE_FOLLOW_UP_GENERATION"] == "false"
-    assert settings["ENABLE_PERSISTENT_CONFIG"] == "false"
-    assert settings["WEBUI_AUTH"] == "false"
-    assert settings["ENABLE_LOGIN_FORM"] == "false"
-    assert settings["DEFAULT_MODELS"] == "openai/gpt-oss-20b"
-    assert "server:mcp:dummy-plant" in settings["DEFAULT_INTERFACE_SETTINGS"]
+def test_pyproject_exposes_plant_and_claude_scripts():
     import tomllib
 
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert "open-webui==0.11.3" in pyproject["project"]["dependencies"]
-    assert pyproject["project"]["scripts"]["open-webui"] == "start_webui:main"
     assert pyproject["project"]["scripts"]["plant"] == "start_plant:main"
+    assert pyproject["project"]["scripts"]["plant-mcp"] == "start_plant_mcp:main"
+    assert pyproject["project"]["scripts"]["claude-config"] == "start_claude_config:main"
+    assert all("open-webui" not in dep for dep in pyproject["project"]["dependencies"])
+
+
+MCP_TOOL_NAMES = [
+    "list_assets",
+    "list_sensors",
+    "get_asset",
+    "get_vibration_reading",
+    "get_recent_events",
+    "list_fix_requests",
+    "request_fix",
+    "set_asset_power",
+    "fail_asset",
+    "replace_asset",
+]
+
+
+def test_factory_map_lists_mcp_tools():
+    html = (ROOT / "mcp-server" / "static" / "factory.html").read_text(encoding="utf-8")
+    assert "Open WebUI" not in html
+    for name in MCP_TOOL_NAMES:
+        assert name in html
+    readme = (ROOT.parent / "README.md").read_text(encoding="utf-8")
+    assert "claude_desktop_config.json" in readme
+    assert "plant-mcp" in readme
+    assert "uv run claude-config" in readme
+
+
+def test_claude_desktop_entry_uses_uv_and_playground(monkeypatch):
+    import start_claude_config
+
+    monkeypatch.setattr(start_claude_config.shutil, "which", lambda _name: r"C:\fake\uv.exe")
+    entry = start_claude_config.server_entry()
+    assert entry["command"].endswith("uv.exe")
+    assert entry["args"][:3] == ["run", "--directory", str(ROOT)]
+    assert entry["args"][-1] == "plant-mcp"

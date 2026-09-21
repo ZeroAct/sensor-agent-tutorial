@@ -8,9 +8,9 @@
 
 ## 끝나면 할 수 있어야 하는 것
 
-1. Open WebUI를 연다
-2. 더미 공장 → SQLite → MCP → 챗봇 경로를 말로 설명한다
-3. Skill을 붙인 챗봇에게 설비/센서를 조회시킨다
+1. 공장 지도를 연다
+2. 더미 공장 → SQLite → MCP → Claude Desktop 경로를 말로 설명한다
+3. Skill을 붙인 Claude에게 설비/센서를 조회시킨다
 4. 답이 `/demo/sensors`와 같은지 보고, **에이전트가 필요한 일**과 **지도만 보면 되는 일**을 가른다
 
 ---
@@ -18,40 +18,31 @@
 ## 연결
 
 ```text
-[더미 공장 + SQLite]  :8000  →  MCP /mcp  →  [Open WebUI :8080] + Skill  →  LLM
+[더미 공장 + SQLite]  :8000  →  MCP stdio  →  [Claude Desktop] + Skill
 ```
 
 챗봇이 값을 아는 것이 아닙니다. **도구를 호출해서** 압니다.
 
-기동·키 넣는 법: [README](../README.md)
+기동: [README](../README.md)
 
 - 공장 http://localhost:8000
-- 챗봇 http://localhost:8080
-
-로그인 화면이 나오면 진행자에게 알리세요 (`uv run open-webui`는 로그인을 끕니다).
+- 챗봇: Claude Desktop. 도구 목록에 **dummy-plant**가 있어야 합니다.
 
 ### MCP
 
-기동하면 Dummy Plant MCP (`http://127.0.0.1:8000/mcp`)가 이미 붙어 있습니다. Admin에서 다시 추가하지 마세요.
-
-새 채팅에서:
-
-1. 모델 **GPT OSS 20B**
-2. 도구 **Dummy Plant** ON
-
-꺼져 있으면 채팅 도구 목록에서 켭니다.
+추가 방법은 [README](../README.md) `Claude Desktop에 MCP 추가`. Settings → Developer 에 **dummy-plant** 가 있어야 합니다.
 
 ### Skill
 
-[`playground/skills/vibration-pdm.md`](../playground/skills/vibration-pdm.md) 전체를 **Workspace → Skills** (없으면 Prompts)에 붙여 넣기.
+[`playground/skills/vibration-pdm.md`](../playground/skills/vibration-pdm.md) 전체를 프로젝트 지시 또는 첫 메시지에 붙여 넣기.
 
-하지 말 것: Python Tool 작성, Skill에 API 키, “숫자를 적당히 채워라”.
+하지 말 것: 로컬 Python Tool 작성, Skill에 비밀, “숫자를 적당히 채워라”.
 
 ---
 
 ## 질문
 
-모델·MCP·Skill을 켠 채팅에서 순서대로.
+dummy-plant와 Skill을 켠 채팅에서 순서대로.
 
 **1.** 지금 플랜트에 설비가 뭐가 있고, 진동 센서는 뭐가 있나요? 도구로 확인한 뒤 표로 보여 주세요.
 
@@ -93,9 +84,9 @@ curl -s http://localhost:8000/demo/events
 
 ## 막힐 때
 
-- **모델 없음 / 오류** — `.env`의 `OPENAI_API_KEY`, `OPENAI_API_BASE_URL`, `OPENAI_API_MODEL`. Groq 무료는 `openai/gpt-oss-20b` (도구 호출됨). `llama-3.1-8b-instant`는 404.
-- **429 TPM** — 도구는 됐는데 답이 안 나오면 Groq 무료 **8000 TPM**. 새 채팅에서 한 도구만, 약 30초 뒤 다시.
-- **MCP 실패** — 공장 `:8000`이 떠 있는지, 채팅에서 Dummy Plant ON인지. Admin에 다시 추가하지 말 것.
+- **dummy-plant 없음** — `uv run claude-config` 후 Claude Desktop을 트레이까지 종료하고 재실행. `uv`는 절대 경로로 들어갑니다.
+- **도구 실패** — 공장 `:8000`이 떠 있는지. 다른 터미널에서 `uv run plant`.
+- **답이 비면** — 공장 JSON은 `/demo/sensors`로 이어서 보면 됩니다.
 - **센서가 항상 정상** — 약 10초마다 스파이크. 같은 센서 3회면 트립. 잠시 뒤 질문 3을 다시.
 
 ---

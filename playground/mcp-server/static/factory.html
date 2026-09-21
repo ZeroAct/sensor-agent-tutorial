@@ -21,11 +21,33 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--white); font-family: "Segoe UI", "Noto Sans KR", sans-serif; }
     body { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
-    header, footer {
+    header {
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
       padding: 8px 16px; border-bottom: 1px solid var(--line); flex-shrink: 0;
     }
-    footer { border-bottom: 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; padding: 6px 16px; }
+    footer.apis {
+      border-top: 1px solid var(--line);
+      display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 8px 20px;
+      padding: 8px 16px 10px; align-items: start; flex-shrink: 0;
+    }
+    .api-col h3 {
+      margin: 0 0 6px; font-size: 10px; letter-spacing: 0.14em;
+      color: var(--muted); font-weight: 700;
+    }
+    .api-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+    .api-grid.stack { grid-template-columns: 1fr; }
+    .api {
+      display: flex; gap: 8px; align-items: baseline;
+      border: 1px solid var(--line); background: var(--card);
+      border-radius: 7px; padding: 4px 8px; min-width: 0;
+    }
+    .api.write { border-color: #5a4a20; }
+    .api code {
+      color: var(--cyan); font-size: 11px; font-family: "Cascadia Code", "Consolas", monospace;
+      white-space: nowrap; flex: 0 1 auto;
+    }
+    .api.write code { color: var(--warning); }
+    .api span { color: var(--muted); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
     h1 { margin: 0; font-size: 15px; letter-spacing: 0.04em; }
     .sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
     .pills { display: flex; gap: 6px; flex-wrap: nowrap; }
@@ -138,7 +160,7 @@
   <header>
     <div>
       <h1>DUMMY COOLING PLANT · TOP-DOWN</h1>
-      <div class="sub">설비+센서 한 카드 · FIX는 작업자 수락 · 이상 3회 트립</div>
+      <div class="sub">설비+센서 한 카드 · FIX는 작업자 수락 · MCP 도구는 아래</div>
     </div>
     <div class="pills">
       <div class="pill" id="link">SSE 연결 중…</div>
@@ -164,9 +186,27 @@
       </div>
     </aside>
   </main>
-  <footer>
-    <span>에이전트는 request_fix만. 공구는 화면의 FIX / 수락.</span>
-    <span>Open WebUI MCP <code>/mcp</code></span>
+  <footer class="apis" id="apis">
+    <div class="api-col">
+      <h3>MCP 조회 · Claude가 부르는 도구</h3>
+      <div class="api-grid">
+        <div class="api"><code>list_assets()</code><span>설비 목록 · 전원·시리얼</span></div>
+        <div class="api"><code>list_sensors()</code><span>센서 10 · RMS·상태</span></div>
+        <div class="api"><code>get_asset(asset_id)</code><span>설비 하나 · 이상 횟수</span></div>
+        <div class="api"><code>get_vibration_reading(sensor_id)</code><span>최신 RMS</span></div>
+        <div class="api"><code>get_recent_events(…)</code><span>이상·전원·고장 로그</span></div>
+        <div class="api"><code>list_fix_requests()</code><span>작업자 FIX 큐</span></div>
+      </div>
+    </div>
+    <div class="api-col">
+      <h3>MCP 변경 · 더미만 · 실설비 아님</h3>
+      <div class="api-grid stack">
+        <div class="api write"><code>request_fix(asset_id)</code><span>요청만. 화면에서 수락</span></div>
+        <div class="api write"><code>set_asset_power(asset_id, on)</code><span>더미 ON / OFF</span></div>
+        <div class="api write"><code>fail_asset(asset_id)</code><span>더미 고장</span></div>
+        <div class="api write"><code>replace_asset(asset_id)</code><span>고장 설비 새 시리얼</span></div>
+      </div>
+    </div>
   </footer>
   <script>
     const svg = document.getElementById("floor");
@@ -210,9 +250,6 @@
       });
     }
     function setPower(assetId, on) { return post("/demo/power", { asset_id: assetId, on }); }
-    function applyFix(assetId) { return post("/demo/fix", { action: "apply", asset_id: assetId }); }
-    function acceptFix(requestId) { return post("/demo/fix", { action: "accept", request_id: requestId }); }
-    function dismissFix(requestId) { return post("/demo/fix", { action: "dismiss", request_id: requestId }); }
     function selectAsset(assetId) {
       selectedId = assetId;
       if (latest) render(latest);

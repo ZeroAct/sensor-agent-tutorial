@@ -35,17 +35,16 @@
 
 ## 시작 24시간 전 체크리스트
 
-- [ ] [README](../README.md)대로 uv로 공장(:8000)과 Open WebUI(:8080)가 한 번 성공
-- [ ] **본인 계정** 무료 LLM 키가 `.env`에 들어 있고, Open WebUI 첫 질문이 답한다
+- [ ] [README](../README.md)대로 `uv run plant` 한 번 성공, 공장 :8000
+- [ ] **본인 PC**에 Claude Desktop이 있고, `uv run claude-config` 후 dummy-plant가 보인다
 - [ ] `curl -s http://localhost:8000/health` → `"ok": true`
 - [ ] 더미 센서가 10~20초 안에 이상을 한 번 낸다 (기본 `ANOMALY_EVERY_SEC=10`). 같은 센서 3회면 트립
 - [ ] `fail_asset pump-a` 후 지도가 빨개지고, `replace_asset` 후 새 시리얼이 나온다
 - [ ] 슬라이드 PDF를 프로젝터 백업으로 연다 (애니메이션 없음)
-- [ ] 플랜 B: LLM 없이 `/demo/sensors` JSON을 화면 공유할 브라우저 탭
-- [ ] 워크숍용 Open WebUI는 `uv run open-webui`로 켰는지 확인 (Groq·MCP·20B·제목생성 OFF가 기동 때 들어감)
-- [ ] 수강생에게 **각자 키**를 가져오라고 공지. 공유 키 하나를 쓰면 한도에 더 빨리 걸린다
+- [ ] 플랜 B: Claude 없이 `/demo/sensors` JSON을 화면 공유할 브라우저 탭
+- [ ] 수강생에게 **Claude Desktop 설치·로그인**을 공지. API 키는 가져오지 말 것.
 
-Open WebUI 첫 `uv run open-webui`는 패키지가 커서 몇 분 걸립니다. 강의 전에 한 번 받아 두세요.
+Claude Desktop은 강의 전에 한 번 재시작해 두고, dummy-plant 도구가 보이는지 확인하세요.
 
 ---
 
@@ -57,10 +56,10 @@ Open WebUI 첫 `uv run open-webui`는 패키지가 커서 몇 분 걸립니다. 
 | 8–18 | 이론2 시나리오 (~10분) | 9–13 | 공장 10센서 / pump-a-de 주인공, RMS=크기, 이상은 더미 임계값 |
 | 18–33 | 이론3 챗봇·MCP·Skill (~15분) | 14–19 | LLM 한계 → 조회/변경 도구 → Skill. MQTT 없음 |
 | 33–50 | 이론4 설계 원칙 (~17분) **깊게** | 20–26 | Skill, 작은 도구, **에이전트 vs 과함**, 더미 변경 vs 실설비 |
-| 50–55 | 휴식 또는 환경 점검 | — | 키 없는 사람 돕기. 5분을 넘기지 말 것 |
-| 55–70 | 스택 기동 | 27–29 | uv, `.env` 키, :8000 / :8080 |
-| 70–85 | MCP + Skill | 30–31 | Dummy Plant ON 확인, Skill 붙여 질문 3개 |
-| 85–95 | 해석 + 리스크 | 32–33 | 현장 언어, 숫자 대조, 429와 관리자 이슈 |
+| 50–55 | 휴식 또는 환경 점검 | — | Desktop 없는 사람 돕기. 5분을 넘기지 말 것 |
+| 55–70 | 스택 기동 | 27–29 | uv, :8000, `claude-config` |
+| 70–85 | MCP + Skill | 30–31 | dummy-plant 확인, Skill 붙여 질문 3개 |
+| 85–95 | 해석 + 리스크 | 32–33 | 현장 언어, 숫자 대조, 재시작·설치 이슈 |
 | 95–100 | 닫기 | 34 | 한 문장 회고, Q&A, 자료 위치 |
 
 이론만 합치면 **8 + 10 + 15 + 17 = 50분**. 모듈 4가 가장 깁니다.
@@ -87,7 +86,7 @@ Open WebUI 첫 `uv run open-webui`는 패키지가 커서 몇 분 걸립니다. 
 
 - 권위 위치: 베어링이 아니라 **도구와 언어 설계**
 - 모르면: “오늘은 더미 임계값입니다. 현장 기준은 설비마다 다릅니다.”
-- 모듈 3에서 Open WebUI UI 클릭 디테일 금지 → 실습으로 이관
+- 모듈 3에서 Claude 클릭 디테일 금지 → 실습으로 이관
 - 모듈 4에서 [`playground/skills/vibration-pdm.md`](../playground/skills/vibration-pdm.md)를 **반드시 화면 공유**
 - 시간 밀림 시 자르는 순서: 안티패턴 일부 → 질문 축소 → Q&A. **모듈 4 보호**
 
@@ -199,7 +198,7 @@ Open WebUI 첫 `uv run open-webui`는 패키지가 커서 몇 분 걸립니다. 
      - 조회: `list_assets`, `list_sensors`, `get_vibration_reading`, `get_recent_events`
      - 변경(더미): `request_fix`(화면 수락), `set_asset_power`, `fail_asset`, `replace_asset`
    - 설비 인스턴스와 센서는 다르다. `pump-a`를 끄면 `pump-a-de`가 offline이 된다
-   - 데이터 경로: 더미 생성기 + SQLite → MCP :8000 → 챗봇
+   - 데이터 경로: 더미 생성기 + SQLite → MCP stdio → Claude Desktop
 3. **(4분) 막히는 지점 3 — Skills**
    - 도구가 있어도 모델은 대충 요약 / 없는 ID / **말 안 한 펌프를 끔**
    - Skill = 도구를 *어떻게* 쓸지 적은 **Markdown 플레이북**
@@ -259,25 +258,25 @@ Open WebUI 첫 `uv run open-webui`는 패키지가 커서 몇 분 걸립니다. 
 
 ### 환경 (15분)
 
-기동은 [README](../README.md). 프로젝터에 `.env` **키 이름**만 보여 주고, 값은 각자 입력.
+기동은 [README](../README.md). 프로젝터에 Claude Desktop 재시작만 보여 줍니다.
 
 성공 신호
 
 - 공장 http://localhost:8000
-- Open WebUI http://localhost:8080
+- Claude Desktop에 **dummy-plant**
 
-막힌 사람: `uv --version`, `.env` 키, 포트 충돌만 본다. 디버깅에 10분을 쓰지 않습니다.
+막힌 사람: `uv --version`, Claude 재시작, 포트 충돌만 본다. 디버깅에 10분을 쓰지 않습니다.
 
 ### 연결 (15분)
 
-`uv run open-webui`가 Groq, Dummy Plant MCP, `gpt-oss-20b`를 이미 넣습니다. Admin에서 MCP를 다시 추가하지 마세요.
+`uv run claude-config`가 dummy-plant를 Claude 설정에 넣습니다. 수강생이 JSON을 손으로 고치지 않게 합니다.
 
-1. Open WebUI 새 채팅 → 모델 **GPT OSS 20B**
-2. 도구 **Dummy Plant** ON (꺼져 있으면 켭니다)
-3. Skill Markdown을 **Workspace → Skills** 또는 **Prompt**에 그대로 붙여 넣는다
-   Python Function을 만들지 말라고 한 번 더 말한다
+1. Claude Desktop을 트레이까지 종료한 뒤 다시 연다
+2. Settings → Developer 에서 **dummy-plant** 확인
+3. Skill Markdown을 프로젝트 지시 또는 첫 메시지에 그대로 붙여 넣는다
+   로컬 Python Tool을 만들지 말라고 한 번 더 말한다
 
-이론에서 “원래는 Admin → Integrations에 MCP를 붙인다”는 한 줄로만 보여 줍니다.
+이론에서 “MCP는 설정 파일에 서버를 적는 일”은 한 줄로만 보여 줍니다.
 
 ### 질문 (10분)
 
@@ -305,8 +304,8 @@ Open WebUI 첫 `uv run open-webui`는 패키지가 커서 몇 분 걸립니다. 
 
 리스크 두 개를 경험과 연결합니다.
 
-- 429가 난 사람 → 창피하지 않다. `curl` JSON을 읽으면 실습 목표 달성
-- 로그인·관리자 화면에서 막힌 사람 → 그래서 워크숍은 인증을 끈다. 사내 도입 시 이 비용이 본게임
+- dummy-plant가 안 보이는 사람 → 창피하지 않다. 트레이까지 종료. 그래도 안 되면 `curl` JSON
+- Desktop 설치가 막힌 사람 → 짝/진행자 화면. 공장 지도는 계정 없이 됨
 
 ---
 
@@ -314,16 +313,15 @@ Open WebUI 첫 `uv run open-webui`는 패키지가 커서 몇 분 걸립니다. 
 
 | 증상 | 원인 후보 | 진행자가 할 일 |
 | --- | --- | --- |
-| Open WebUI가 모델 목록 없음 | `.env` 키/베이스 URL | 키 없이 실습하지 말 것. README 예제를 다시 보여 주기 |
-| 채팅 429 / 빈 답 | Groq 무료 TPM 8000. 도구 JSON+제목생성 | 새 채팅, 30초 대기. `uv run open-webui`가 제목생성을 끔. 그래도면 `/demo/sensors` |
-| MCP 연결 실패 | 공장 미기동, Dummy Plant OFF | `:8000` 확인. 채팅에서 Dummy Plant 켜기. Admin에 다시 추가하지 말 것 |
-| 도구를 안 부름 | 채팅에서 MCP 토글 Off, Skill 없음 | 토글 + Skill 붙여 넣기 + “도구를 먼저 호출해” 한 줄 |
+| dummy-plant 없음 | Claude를 재시작하지 않음, uv 상대 경로 | `uv run claude-config` 후 트레이까지 종료. README |
+| 도구 호출 실패 | 공장 미기동 | `:8000` 확인. 다른 터미널에서 `uv run plant` |
+| 답을 지어냄 | Skill 없음 | Skill 붙여 넣기 + “도구를 먼저 호출해” 한 줄 |
 | 센서가 항상 normal | 이상 주기 전에 질문 | 10초 대기 후 `get_recent_events` 재호출 |
-| 8000/8080이 안 열림 | 포트 사용 중, uv 미설치 | `uv --version`, 다른 프로세스 `Ctrl+C` 후 재실행 |
+| :8000이 안 열림 | 포트 사용 중, uv 미설치 | `uv --version`, 다른 프로세스 `Ctrl+C` 후 재실행 |
 
 LLM이 전부 죽어도 **성공 기준**은 다음이면 충분합니다.
 
-1. 공장 :8000 과 Open WebUI :8080 이 떠 있다
+1. 공장 :8000 이 떠 있다
 2. `/health`가 ok
 3. Skill을 읽고 “에이전트가 과한 일 / 필요한 일”을 한 문장으로 말할 수 있다
 
@@ -340,11 +338,11 @@ A. 할 수는 있습니다. 오늘은 의도적으로 임계값을 코드에 두
 **Q. Skill을 영어로 써야 하나요?**  
 A. 모델이 잘 따르는 언어면 됩니다. 오늘 수강생·답이 한국어라 한국어 Skill입니다.
 
-**Q. MCP 대신 Open WebUI Function(Python)은요?**  
+**Q. MCP 대신 로컬 Python Tool은요?**  
 A. 가능하지만 오늘 범위 밖입니다. 운영 팀이 파이썬을 안 고쳐도 되게 Markdown으로 제한했습니다.
 
-**Q. 무료 키가 없으면요?**  
-A. 짝을 이루거나 진행자 화면을 봅니다. JSON 데모로 목표의 80%는 전달됩니다. 키를 공유하지는 않습니다(한도·보안).
+**Q. Claude Desktop이 없으면요?**  
+A. 짝을 이루거나 진행자 화면을 봅니다. JSON 데모로 목표의 80%는 전달됩니다.
 
 ---
 

@@ -4,12 +4,12 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "fastmcp>=2.9.0,<3",
-    "open-webui==0.11.3",
 ]
 
 [project.scripts]
-open-webui = "start_webui:main"
 plant = "start_plant:main"
+plant-mcp = "start_plant_mcp:main"
+claude-config = "start_claude_config:main"
 
 [dependency-groups]
 dev = ["pytest"]
@@ -19,4 +19,4 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["start_webui", "start_plant"]
+py-modules = ["start_plant", "start_plant_mcp", "start_claude_config"]

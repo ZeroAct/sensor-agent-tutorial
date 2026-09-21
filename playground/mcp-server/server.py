@@ -1,4 +1,8 @@
-"""Dummy-plant MCP server (Streamable HTTP on :8000).
+"""Dummy-plant MCP + factory map.
+
+HTTP (`uv run plant`): live map on :8000. SQLite generator.
+stdio (`uv run plant-mcp`): same tools for Claude Desktop. Does not start a second feed.
+
 
 Read tools:
   - list_assets
@@ -334,7 +338,7 @@ async def demo_reset(_request: Request) -> JSONResponse:
 def main() -> None:
     plant.start_feed()
     print(f"factory map     http://{HOST}:{PORT}/", flush=True)
-    print(f"mcp streamable-http on http://{HOST}:{PORT}{PATH}", flush=True)
+    print("Claude Desktop:  other terminal → uv run claude-config, then fully quit Claude", flush=True)
     mcp.run(transport="http", host=HOST, port=PORT, path=PATH)
 
 

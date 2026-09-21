@@ -1,79 +1,95 @@
-# 더미 공장 예지보전 에이전트 실습
+# 더미 공장 + Claude Desktop
 
-공장 http://localhost:8000 · 챗봇 http://localhost:8080
+공장 http://localhost:8000 · 챗봇은 **Claude Desktop**. Docker 없음. API 키 없음.
 
 - 슬라이드: [slides/예지보전_에이전트_실습.pptx](slides/예지보전_에이전트_실습.pptx)
 - 수강생: [docs/STUDENT.md](docs/STUDENT.md)
 - 진행자: [docs/INSTRUCTOR.md](docs/INSTRUCTOR.md)
 
-Docker 없이 **uv** 만 씁니다.
-
 ---
 
-## 1. uv 설치
+## 1. 준비
 
-**Windows (PowerShell)**
+**uv**
 
 ```powershell
 irm https://astral.sh/uv/install.ps1 | iex
 ```
 
-**macOS / Linux**
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
+macOS / Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 새 터미널에서 `uv --version`.
 
----
-
-## 2. API 키
-
-[Groq](https://console.groq.com/keys)
-
-1. 가입 / 로그인
-2. **API Keys → Create API Key**
-3. 아래 `.env`에 붙입니다
-
-무료 Groq는 **TPM 8000**. 모델은 `openai/gpt-oss-20b`.
+**Claude Desktop** — [설치](https://claude.ai/download) 후 로그인.
 
 ---
 
-## 3. 키 넣기
+## 2. 공장
 
 ```powershell
 cd playground
-copy .env.example .env
-```
-
-`.env`의 `OPENAI_API_KEY=` 뒤에 키만 붙입니다.
-
----
-
-## 4. 실행 (터미널 두 개, playground에서)
-
-```powershell
 uv run plant
 ```
 
-```powershell
-uv run open-webui
-```
-
-첫 `uv run`은 Open WebUI를 받느라 몇 분 걸립니다. 그다음부터는 위 한 줄입니다.
-
-- 공장 http://localhost:8000
-- 챗봇 http://localhost:8080 — Groq, Dummy Plant MCP, `gpt-oss-20b`가 이미 붙어 있습니다. Admin에서 MCP를 다시 추가하지 마세요.
+브라우저: http://localhost:8000  
+지도 **아래**에 Claude가 부르는 MCP 도구 목록이 있습니다. 이 터미널은 켜 둡니다.
 
 ---
 
-## 5. 채팅
+## 3. Claude Desktop에 MCP 추가
 
-1. 모델 **GPT OSS 20B**
-2. 도구 **Dummy Plant** ON
-3. Skill [playground/skills/vibration-pdm.md](playground/skills/vibration-pdm.md) 를 Workspace → Skills (없으면 Prompts)에 붙여 넣기
+공장을 켠 다음, **다른 터미널**에서 `playground`로 갑니다.
 
-질문은 [docs/STUDENT.md](docs/STUDENT.md).
+### 방법 A — 스크립트
 
-**429** 면 새 채팅에서 한 도구만, 약 30초 뒤 다시.
+```powershell
+uv run claude-config
+```
+
+이 명령이 `uv`와 `playground`의 **절대 경로**를 Claude 설정에 넣습니다.
+
+그다음 Claude Desktop을 **트레이 아이콘까지 종료**하고 다시 엽니다.
+
+### 방법 B — 설정 파일을 직접 고치기
+
+Claude Desktop → **Settings → Developer → Edit Config**
+
+파일 위치
+
+| OS | 경로 |
+| --- | --- |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Windows (Store) | `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json` |
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+
+`mcpServers` 안에 아래를 넣습니다. `command`와 `--directory`는 **본인 PC의 절대 경로**로 바꿉니다. `uv`는 보통 `C:\Users\<이름>\.local\bin\uv.exe` 입니다.
+
+```json
+{
+  "mcpServers": {
+    "dummy-plant": {
+      "command": "C:\\Users\\<이름>\\.local\\bin\\uv.exe",
+      "args": [
+        "run",
+        "--directory",
+        "C:\\Users\\<이름>\\ws\\sensor-agent-tutorial\\playground",
+        "plant-mcp"
+      ]
+    }
+  }
+}
+```
+
+저장한 뒤 Claude Desktop을 **트레이까지 종료**하고 다시 엽니다. Claude는 사용자 PATH를 못 보는 경우가 많아서 `uv`는 상대 경로로 적지 않습니다.
+
+### 확인
+
+Settings → Developer 에 **dummy-plant** 가 Connected 여야 합니다.
+
+안 보이면: 공장이 `:8000`에 떠 있는지, `uv` 절대 경로가 맞는지, Claude를 트레이까지 죽였는지를 봅니다.
+
+---
+
+## 4. 채팅
+
+[playground/skills/vibration-pdm.md](playground/skills/vibration-pdm.md) 전체를 프로젝트 지시 또는 첫 메시지에 붙여 넣습니다. 질문은 [docs/STUDENT.md](docs/STUDENT.md).

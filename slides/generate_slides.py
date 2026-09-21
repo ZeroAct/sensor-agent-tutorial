@@ -204,7 +204,7 @@ def build() -> Path:
 
     # 1 Title
     s = new_slide(prs)
-    _kicker(s, "SENSOR AGENT TUTORIAL  ·  OPEN WEBUI × MCP × MARKDOWN SKILLS")
+    _kicker(s, "SENSOR AGENT TUTORIAL  ·  CLAUDE DESKTOP × MCP × MARKDOWN SKILLS")
     _textbox(s, Inches(0.55), Inches(1.6), Inches(12), Inches(1.2), "예지보전, 챗봇으로 열기", size=40, bold=True, color=WHITE, font=FONT_TITLE, space=0)
     _textbox(
         s,
@@ -218,8 +218,8 @@ def build() -> Path:
         space=4,
     )
     _card(s, 0.55, 4.3, 3.7, 1.85, "01 이론", "설계가 본게임", "조회 vs 변경, Skill.\n에이전트가 과한 때를 가른다.", CYAN)
-    _card(s, 4.55, 4.3, 3.7, 1.85, "02 경로", "더미 공장 → SQLite", "MCP :8000  →  Open WebUI :8080\nMQTT 없음.", AMBER)
-    _card(s, 8.55, 4.3, 3.7, 1.85, "03 한계", "학습용 더미", "실제 정비 절차가 아닙니다.\n무료 한도와 관리자 비용을 같이 봅니다.", ROSE)
+    _card(s, 4.55, 4.3, 3.7, 1.85, "02 경로", "더미 공장 → SQLite", "MCP stdio  →  Claude Desktop\nMQTT 없음.", AMBER)
+    _card(s, 8.55, 4.3, 3.7, 1.85, "03 한계", "학습용 더미", "실제 정비 절차가 아닙니다.\n조회만이면 지도로도 충분합니다.", ROSE)
     add(s, "0–1분. 제목만. ‘예지보전 전문 강의가 아님’을 첫 문장으로. 진행자는 AI 엔지니어다.")
 
     # 2 Map
@@ -231,7 +231,7 @@ def build() -> Path:
         ("8–18분", "이론 2", "센서 이상 시나리오", "펌프 A · 팬 B, RMS, 수업용 임계값"),
         ("18–33분", "이론 3", "챗봇 + MCP + Skills", "LLM은 현장에 없다. 도구와 플레이북"),
         ("33–50분", "이론 4", "설계 원칙 (가장 깊게)", "에이전트 vs 과함, 더미 변경 vs 실설비"),
-        ("50–100분", "실습", "uv + Open WebUI", "더미 공장 → SQLite → MCP → 챗봇"),
+        ("50–100분", "실습", "uv + Claude Desktop", "더미 공장 → SQLite → MCP → 챗봇"),
     ]
     y = 1.45
     for tmin, blk, title, body in rows:
@@ -420,7 +420,7 @@ def build() -> Path:
     _kicker(s, "THEORY 3  ·  MCP")
     _title(s, "MCP는 도구를 부르는 표준 계약입니다")
     _card(s, 0.55, 1.5, 6.0, 2.2, "무엇인가", "Model Context Protocol", "챗봇 호스트가 외부 도구를\n같은 방식으로 발견·호출하게.", CYAN)
-    _card(s, 6.8, 1.5, 6.0, 2.2, "오늘 전송", "Streamable HTTP", "Open WebUI 네이티브 MCP는 SSE/stdio가 아닙니다.\nURL은 /mcp .", VIOLET)
+    _card(s, 6.8, 1.5, 6.0, 2.2, "오늘 전송", "stdio", "Claude Desktop은 JSON 설정으로\n로컬 프로세스를 붙입니다.\n명령은 `uv run plant-mcp`.", VIOLET)
     _card(s, 0.55, 3.9, 3.9, 2.4, "조회", "list / get", "assets · sensors · events", MINT)
     _card(s, 4.7, 3.9, 3.9, 2.4, "변경(더미)", "power / fail", "set_asset_power, fail_asset", AMBER)
     _card(s, 8.85, 3.9, 3.9, 2.4, "교체(더미)", "replace_asset", "고장난 인스턴스만.", ROSE)
@@ -439,7 +439,7 @@ def build() -> Path:
     ]
     _box(s, Inches(0.55), Inches(1.5), Inches(7.3), Inches(4.8), CARD, LINE)
     _textbox(s, Inches(0.85), Inches(1.75), Inches(6.8), Inches(4.3), "\n\n".join("▸  " + x for x in items), size=17, color=WHITE, space=6)
-    _card(s, 8.1, 1.5, 4.7, 4.8, "오늘 규칙", "Markdown only", "Open WebUI Python Function으로\n도구를 만들지 않습니다.\n\n운영팀이 파이썬을 안 고쳐도\n문장을 고치면 행동이 바뀝니다.", AMBER)
+    _card(s, 8.1, 1.5, 4.7, 4.8, "오늘 규칙", "Markdown only", "로컬 Python Tool을 만들지\n않습니다.\n\n운영팀이 파이썬을 안 고쳐도\n문장을 고치면 행동이 바뀝니다.", AMBER)
     add(s, "3분. Skill 파일을 나중에 화면으로 연다.")
 
     # 19 Path
@@ -448,10 +448,10 @@ def build() -> Path:
     _title(s, "한 장으로 외우는 오늘 아키텍처")
     boxes = [
         ("더미 공장", "생성기\n+ SQLite"),
-        ("MCP", "조회·변경\n:8000/mcp"),
+        ("MCP", "조회·변경\nplant-mcp"),
         ("지도", "top-down\n:8000/"),
-        ("Open WebUI", "챗봇\n:8080"),
-        ("LLM", "무료 티어\nOpenAI 호환"),
+        ("Claude", "Desktop\nstdio MCP"),
+        ("Skill", "Markdown\n붙여 넣기"),
     ]
     x = 0.4
     for i, (title, body) in enumerate(boxes):
@@ -461,7 +461,7 @@ def build() -> Path:
         if i < len(boxes) - 1:
             _textbox(s, Inches(x + 2.05), Inches(2.85), Inches(0.4), Inches(0.4), "→", size=20, bold=True, color=AMBER, align=PP_ALIGN.CENTER, space=0)
         x += 2.55
-    _textbox(s, Inches(0.55), Inches(4.7), Inches(12.2), Inches(1.3), "Skill Markdown은 Open WebUI 쪽에 붙습니다.\n센서 경로와 모델 경로가 분리되어 있어야, 모델이 죽어도 JSON으로 수업을 이어 갑니다.", size=16, color=SOFT, space=4)
+    _textbox(s, Inches(0.55), Inches(4.7), Inches(12.2), Inches(1.3), "Skill Markdown은 Claude Desktop 쪽에 붙습니다.\n센서 경로와 모델 경로가 분리되어 있어야, 챗봇이 죽어도 JSON으로 수업을 이어 갑니다.", size=16, color=SOFT, space=4)
     add(s, "3분. 이론3 종료. 화살표를 따라 손가락.")
 
     # 20 Section theory 4
@@ -518,9 +518,9 @@ def build() -> Path:
     _title(s, "이 여섯 개는 실습에서 일부러 피합니다")
     antis = [
         ("만능 도구", "analyze_everything 하나"),
-        ("비밀을 프롬프트에", "API 키를 Skill에 붙여 넣기"),
-        ("Python Skill", "오늘 범위 밖 Function"),
-        ("빈 Bearer", "MCP 인증 None이 정답"),
+        ("비밀을 프롬프트에", "키나 경로를 Skill에 붙여 넣기"),
+        ("Python Tool", "오늘 범위 밖 로컬 도구"),
+        ("상대 경로 uv", "Claude는 PATH를 못 볼 수 있음"),
         ("모델에게 승인", "정비를 챗봇이 결재"),
         ("더미를 현장으로", "이 JSON으로 펌프 정지"),
     ]
@@ -547,44 +547,44 @@ def build() -> Path:
     # 27 Lab section
     s = new_slide(prs)
     _kicker(s, "LAB  ·  50분")
-    _textbox(s, Inches(0.55), Inches(2.2), Inches(12), Inches(1.2), "실습: uv와 Open WebUI", size=36, bold=True, color=WHITE, font=FONT_TITLE, space=0)
+    _textbox(s, Inches(0.55), Inches(2.2), Inches(12), Inches(1.2), "실습: uv와 Claude Desktop", size=36, bold=True, color=WHITE, font=FONT_TITLE, space=0)
     _textbox(s, Inches(0.55), Inches(3.5), Inches(11.5), Inches(1.2), "코딩하지 않습니다. 스택을 켜고, 도구를 붙이고, 답을 대조합니다.", size=20, color=CYAN, space=4)
     add(s, "실습 시작. 수강생 가이드 docs/STUDENT.md 와 같은 순서.")
 
     # 28 Bring up
     s = new_slide(prs)
     _kicker(s, "LAB  ·  기동")
-    _title(s, "uv로 공장과 챗봇")
+    _title(s, "uv로 공장, Claude로 챗봇")
     _box(s, Inches(0.55), Inches(1.5), Inches(12.2), Inches(3.3), RGBColor(0x0A, 0x16, 0x28), CYAN)
-    cmd = "cd playground\ncopy .env.example .env     # 키만 붙이기\nuv run plant\nuv run open-webui"
+    cmd = "cd playground\ncopy .env.example .env\nuv run plant\nuv run claude-config"
     _textbox(s, Inches(0.85), Inches(1.7), Inches(11.6), Inches(2.9), cmd, size=16, color=MINT, space=6, font="NanumGothicCoding")
-    _textbox(s, Inches(0.55), Inches(5.0), Inches(12.2), Inches(1.2), "성공: 공장 :8000 (지도+SQLite+MCP) · Open WebUI :8080\n설치·키·실행은 README. Docker 없음.", size=15, color=SOFT, space=4)
+    _textbox(s, Inches(0.55), Inches(5.0), Inches(12.2), Inches(1.2), "성공: 공장 :8000 · Claude Desktop에 dummy-plant.\nClaude는 트레이까지 종료 후 재실행. Docker 없음. API 키 없음.", size=15, color=SOFT, space=4)
     add(s, "15분 블록의 기동. 디버깅에 10분을 쓰지 말 것.")
 
     # 29 Free LLM
     s = new_slide(prs)
     _kicker(s, "LAB  ·  LLM")
-    _title(s, "무료 티어는 OpenAI 호환 URL만 맞으면 됩니다")
-    _card(s, 0.55, 1.55, 4.0, 4.7, "Groq", "예시 기본값", "BASE https://api.groq.com/openai/v1\n모델은 .env.example 주석.", CYAN)
-    _card(s, 4.75, 1.55, 4.0, 4.7, "그 외", "OpenRouter · Gemini", "형식이 OpenAI면 됩니다.\n키는 저장소에 없습니다.", VIOLET)
-    _card(s, 8.95, 1.55, 4.0, 4.7, "키 없음", "JSON으로 진행", "공장+MCP는 키가 없어도 뜹니다.\n챗봇만 비어 있습니다.", AMBER)
-    add(s, "5분. 키를 공유하지 말 것(한도).")
+    _title(s, "챗봇은 Claude Desktop 계정입니다")
+    _card(s, 0.55, 1.55, 4.0, 4.7, "Claude", "실습 기본값", "Desktop 설치 후 로그인.\nAPI 키를 .env에 넣지 않습니다.", CYAN)
+    _card(s, 4.75, 1.55, 4.0, 4.7, "MCP", "stdio", "uv run claude-config\n가 절대 경로를 씁니다.", VIOLET)
+    _card(s, 8.95, 1.55, 4.0, 4.7, "계정 없음", "JSON으로 진행", "공장 지도는 계정 없이 뜹니다.\n챗봇만 짝/진행자 화면.", AMBER)
+    add(s, "5분. 계정 없으면 JSON으로. 키를 나눠 주지 말 것.")
 
     # 30 Connect
     s = new_slide(prs)
     _kicker(s, "LAB  ·  연결")
-    _title(s, "MCP는 Streamable HTTP, Skill은 붙여 넣기")
+    _title(s, "MCP는 claude-config, Skill은 붙여 넣기")
     items = [
-        "Admin → Integrations → Add Server",
-        "타입: MCP (Streamable HTTP)  ← OpenAPI 아님",
-        "URL: http://127.0.0.1:8000/mcp",
-        "Auth: None  (빈 Bearer 금지)",
-        "채팅에서 MCP 토글 ON",
-        "skills/vibration-pdm.md 전체를 Skills 또는 Prompts에 복사",
+        "playground에서 uv run claude-config",
+        "Claude Desktop을 트레이까지 종료 후 재실행",
+        "Settings → Developer 에 dummy-plant",
+        "도구가 안 보이면 uv 절대 경로를 확인",
+        "공장 터미널은 uv run plant 유지",
+        "skills/vibration-pdm.md 전체를 프로젝트 지시 또는 첫 메시지에 복사",
     ]
     _box(s, Inches(0.55), Inches(1.5), Inches(12.2), Inches(4.8), CARD, LINE)
     _textbox(s, Inches(0.9), Inches(1.75), Inches(11.5), Inches(4.3), "\n".join(f"{i+1}.  {x}" for i, x in enumerate(items)), size=18, color=WHITE, space=8)
-    add(s, "15분. 화면을 천천히. 타입이 Streamable HTTP인지 확인.")
+    add(s, "15분. 화면을 천천히. dummy-plant가 Developer에 있는지 확인.")
 
     # 31 Questions
     s = new_slide(prs)
@@ -616,8 +616,8 @@ def build() -> Path:
     s = new_slide(prs)
     _kicker(s, "LAB  ·  RISKS")
     _title(s, "오늘 반드시 경험으로 말할 두 가지")
-    _card(s, 0.55, 1.55, 6.0, 4.7, "1", "무료 티어 속도 제한", "429, 빈 답, ‘잠시 후’.\n창피하지 않습니다.\ncurl JSON으로 수업을 잇습니다.\n공유 키 하나는 더 빨리 죽습니다.", AMBER)
-    _card(s, 6.8, 1.55, 6.0, 4.7, "2", "Open WebUI 관리자 부담", "MCP 추가는 관리자 메뉴.\n첫 가입자=관리자, 비밀번호 분실.\n워크숍은 WEBUI_AUTH=false.\n사내 개방망에 그대로 두지 말 것.", ROSE)
+    _card(s, 0.55, 1.55, 6.0, 4.7, "1", "도구가 안 보임", "claude-config 후\nClaude를 트레이까지 종료.\nuv는 절대 경로.\n공장은 다른 터미널에서 유지.", AMBER)
+    _card(s, 6.8, 1.55, 6.0, 4.7, "2", "계정·설치 부담", "Desktop이 없으면 JSON으로.\n사내 PC에 설치 정책이 있을 수 있음.\n공장 지도는 계정 없이 뜹니다.", ROSE)
     add(s, "5분. 사내 도입 시 이 두 개가 본게임이라고 말하며 실습 닫기.")
 
     # 34 Close
