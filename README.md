@@ -53,7 +53,7 @@ Python 패키지를 받아 실행하는 도구입니다. 한 줄이면 됩니다
 **Windows (PowerShell)**
 
 ```powershell
-irm https://astral.sh/uv/install.ps1 | iex
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
 **Mac (터미널)**
