@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -306,12 +307,22 @@ def test_factory_map_lists_mcp_tools():
     assert "uv run claude-config" in readme
 
 
-def test_claude_desktop_entry_uses_venv_python():
+def test_claude_desktop_entry_uses_uv(monkeypatch, tmp_path):
     import start_claude_config
 
+    fake = tmp_path / ("uv.exe" if os.name == "nt" else "uv")
+    fake.write_text("", encoding="utf-8")
+    monkeypatch.setattr(start_claude_config, "uv_executable", lambda: fake.resolve())
     entry = start_claude_config.server_entry()
-    assert entry["command"].endswith("python.exe") or entry["command"].endswith("python")
-    assert entry["args"] == [str(ROOT / "start_plant_mcp.py")]
+    assert Path(entry["command"]) == fake.resolve()
+    assert entry["args"] == [
+        "run",
+        "--directory",
+        str(ROOT),
+        "--no-sync",
+        "python",
+        "start_plant_mcp.py",
+    ]
     assert entry["cwd"] == str(ROOT)
     assert entry["env"]["FASTMCP_SHOW_CLI_BANNER"] == "false"
 

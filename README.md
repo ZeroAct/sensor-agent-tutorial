@@ -8,7 +8,7 @@ Windows와 Mac 모두 됩니다.
 - 챗봇: Claude Desktop (브라우저 Claude가 아님)
 - API 키 없음 · Docker 없음
 
-슬라이드: [slides/예지보전_에이전트_실습.pptx](slides/예지보전_에이전트_실습.pptx) · 수강생: [docs/STUDENT.md](docs/STUDENT.md) · 진행자: [docs/INSTRUCTOR.md](docs/INSTRUCTOR.md)
+슬라이드: [설비 진단 에이전트 기초 및 실습.pptx](설비%20진단%20에이전트%20기초%20및%20실습.pptx) · 수강생: [docs/STUDENT.md](docs/STUDENT.md) · 진행자: [docs/INSTRUCTOR.md](docs/INSTRUCTOR.md)
 
 **오늘 할 일**
 
@@ -140,10 +140,9 @@ cd playground
 uv run claude-config
 ```
 
-이 명령이 Claude 설정 파일에 `dummy-plant`를 넣습니다. Python과 `start_plant_mcp.py`의 **절대 경로**를 씁니다.
+이 명령이 Claude 설정 파일에 `dummy-plant`를 넣습니다. **`uv`의 절대 경로**로 `python start_plant_mcp.py`를 켭니다.
 
-- Windows: `playground\.venv\Scripts\python.exe`
-- Mac: `playground/.venv/bin/python`
+Windows에서 `uv run plant-mcp`는 `plant-mcp.exe`가 막혀 `Server disconnected`가 나는 경우가 있어, 스크립트를 직접 실행합니다.
 
 ### 4-2. Claude를 완전히 종료했다가 다시 열기
 
@@ -193,35 +192,43 @@ Claude → Settings → Developer → **Edit Config**
 | Windows (Store) | `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json` |
 | Mac | `~/Library/Application Support/Claude/claude_desktop_config.json` |
 
-경로의 `이름`과 저장소 위치를 **본인 컴퓨터의 절대 경로**로 바꿉니다. 먼저 `uv run plant`를 한 번 해서 `.venv`가 있어야 합니다.
+`command`는 **`uv`의 절대 경로**입니다. Claude는 사용자 PATH를 못 보는 경우가 많아서 `uv`만 적지 않습니다. 먼저 `uv run plant`를 한 번 해서 `.venv`가 있어야 합니다.
 
-**Windows**
+**Windows** (`uv.exe`는 보통 `C:\Users\이름\.local\bin\uv.exe`)
 
 ```json
 {
   "mcpServers": {
     "dummy-plant": {
-      "command": "C:\\Users\\이름\\ws\\sensor-agent-tutorial\\playground\\.venv\\Scripts\\python.exe",
+      "command": "C:\\Users\\이름\\.local\\bin\\uv.exe",
       "args": [
-        "C:\\Users\\이름\\ws\\sensor-agent-tutorial\\playground\\start_plant_mcp.py"
-      ],
-      "cwd": "C:\\Users\\이름\\ws\\sensor-agent-tutorial\\playground"
+        "run",
+        "--directory",
+        "C:\\Users\\이름\\ws\\sensor-agent-tutorial\\playground",
+        "--no-sync",
+        "python",
+        "start_plant_mcp.py"
+      ]
     }
   }
 }
 ```
 
-**Mac**
+**Mac** (`which uv`로 확인. 보통 `~/.local/bin/uv`)
 
 ```json
 {
   "mcpServers": {
     "dummy-plant": {
-      "command": "/Users/이름/ws/sensor-agent-tutorial/playground/.venv/bin/python",
+      "command": "/Users/이름/.local/bin/uv",
       "args": [
-        "/Users/이름/ws/sensor-agent-tutorial/playground/start_plant_mcp.py"
-      ],
-      "cwd": "/Users/이름/ws/sensor-agent-tutorial/playground"
+        "run",
+        "--directory",
+        "/Users/이름/ws/sensor-agent-tutorial/playground",
+        "--no-sync",
+        "python",
+        "start_plant_mcp.py"
+      ]
     }
   }
 }

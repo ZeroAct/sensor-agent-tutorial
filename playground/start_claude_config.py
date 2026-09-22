@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -12,10 +13,18 @@ SERVER_ID = "dummy-plant"
 SCRIPT = ROOT / "start_plant_mcp.py"
 
 
-def venv_python() -> Path:
-    if os.name == "nt":
-        return ROOT / ".venv" / "Scripts" / "python.exe"
-    return ROOT / ".venv" / "bin" / "python"
+def uv_executable() -> Path:
+    found = shutil.which("uv")
+    if found:
+        return Path(found).resolve()
+    name = "uv.exe" if os.name == "nt" else "uv"
+    for candidate in (
+        Path.home() / ".local" / "bin" / name,
+        Path.home() / ".cargo" / "bin" / name,
+    ):
+        if candidate.exists():
+            return candidate.resolve()
+    raise SystemExit("uv 를 찾지 못했습니다. 새 터미널에서 `uv --version` 후 다시 실행하세요.")
 
 
 def config_candidates(home: Path | None = None) -> list[Path]:
@@ -43,14 +52,20 @@ def config_candidates(home: Path | None = None) -> list[Path]:
 
 
 def server_entry() -> dict:
-    py = venv_python()
-    if not py.exists():
-        raise SystemExit(
-            "playground/.venv 이 없습니다. 먼저 `uv run plant` 또는 `uv sync` 후 다시 실행하세요."
-        )
+    if not SCRIPT.exists():
+        raise SystemExit(f"{SCRIPT.name} 이 없습니다.")
+    # `uv run plant-mcp` launches plant-mcp.exe; some Windows PCs block that.
+    # `uv run python start_plant_mcp.py` uses the project interpreter instead.
     return {
-        "command": str(py.resolve()),
-        "args": [str(SCRIPT)],
+        "command": str(uv_executable()),
+        "args": [
+            "run",
+            "--directory",
+            str(ROOT),
+            "--no-sync",
+            "python",
+            SCRIPT.name,
+        ],
         "cwd": str(ROOT),
         "env": {
             "PYTHONUNBUFFERED": "1",
@@ -87,9 +102,9 @@ def main() -> None:
     for path in config_paths():
         merge_config(path, entry)
         written.append(str(path))
-    print("dummy-plant MCP 를 Claude Desktop 설정에 넣었습니다. (stdio)", flush=True)
+    print("dummy-plant MCP 를 Claude Desktop 설정에 넣었습니다. (stdio, uv)", flush=True)
     print(f"  {entry['command']}", flush=True)
-    print(f"  {entry['args'][0]}", flush=True)
+    print(f"  {' '.join(entry['args'])}", flush=True)
     for path in written:
         print(f"  {path}", flush=True)
     if sys.platform == "darwin":
