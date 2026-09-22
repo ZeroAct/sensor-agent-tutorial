@@ -22,6 +22,23 @@ Windows와 Mac 모두 됩니다.
 
 ---
 
+## 0. 소스코드 다운로드
+
+1. git을 사용할 경우 작업 디렉터리로 이동하여
+   ```shell
+   git clone https://github.com/ZeroAct/sensor-agent-tutorial
+   cd sensor-agent-tutorial/playground
+   ```
+
+2. 혹은, 파일을 직접 다운로드하여 압축을 풉니다.
+   <img width="1134" height="856" alt="image" src="https://github.com/user-attachments/assets/abf57720-0241-4757-b662-9b8f7e5dacb2" />
+   압축 푼 디렉터리 안에서
+   ```shell
+   cd playground
+   ```
+
+---
+
 ## 1. Claude Desktop 설치
 
 브라우저 Claude(claude.ai)와 **데스크톱 앱**은 다릅니다. MCP(로컬 공장 도구)는 데스크톱 앱에서만 붙습니다.
